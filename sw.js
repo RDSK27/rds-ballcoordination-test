@@ -1,6 +1,8 @@
 // Service Worker - Ball Coordination Test (RDS)
-// Permite usar la app sin conexion una vez abierta con red.
-var CACHE = "coord1-v3";
+// Uso sin conexion: cachea la app y el SDK de Firebase (gstatic).
+// Las llamadas de datos a Firestore NO se cachean (las gestiona la
+// persistencia offline de Firestore).
+var CACHE = "coord1-v4";
 var ASSETS = [
   "./",
   "./index.html",
@@ -27,14 +29,18 @@ self.addEventListener("activate", function(e){
 
 self.addEventListener("fetch", function(e){
   if (e.request.method !== "GET") return;
+  var url = e.request.url;
+  var cacheable = (url.indexOf(self.location.origin) === 0) ||
+                  (url.indexOf("https://www.gstatic.com/") === 0);
   e.respondWith(
     caches.match(e.request).then(function(cached){
       if (cached) return cached;
       return fetch(e.request).then(function(resp){
-        return caches.open(CACHE).then(function(c){
-          try { c.put(e.request, resp.clone()); } catch(err){}
-          return resp;
-        });
+        if (cacheable){
+          var clone = resp.clone();
+          caches.open(CACHE).then(function(c){ try { c.put(e.request, clone); } catch(err){} });
+        }
+        return resp;
       }).catch(function(){
         if (e.request.mode === "navigate") return caches.match("./index.html");
       });

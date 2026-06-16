@@ -277,6 +277,43 @@ table.rk tr.top3 td{background:#f7efe7;}
 
 </div>
 
+<!-- Firebase (ranking global) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBXf2_4k0JbSefBX29dqGIqE_YB-kRw1jE",
+  authDomain: "rds-ballcoordination-test.firebaseapp.com",
+  projectId: "rds-ballcoordination-test",
+  storageBucket: "rds-ballcoordination-test.firebasestorage.app",
+  messagingSenderId: "11386456545",
+  appId: "1:11386456545:web:1f955f91780e44ff74aaa0"
+};
+
+let db = null;
+try {
+  const app = initializeApp(firebaseConfig);
+  db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+} catch (e) { console.warn("Firebase init error", e); }
+
+window.RDS_DB = {
+  ok: !!db,
+  add: function(rec){
+    if (!db) return Promise.reject(new Error("no-db"));
+    return addDoc(collection(db, "scores"), rec);
+  },
+  fetchAll: function(){
+    if (!db) return Promise.reject(new Error("no-db"));
+    return getDocs(collection(db, "scores")).then(function(snap){
+      var out = [];
+      snap.forEach(function(d){ out.push(d.data()); });
+      return out;
+    });
+  }
+};
+</script>
+
 <script>
 "use strict";
 
@@ -332,6 +369,7 @@ var state = {
 var rankFilter = { mode: "normal", count: 30 };
 var savedName = "";
 var hideDups = false;
+var allScores = null;
 var lastPlayed = null;
 
 // ---------- Utilidades DOM ----------
@@ -839,10 +877,9 @@ function renderResults(isLimitFail, isNull, nullReason){
       var nm = $("res-name").value.trim().toUpperCase();
       if (!nm) nm = "RDS";
       savedName = nm; safeSet("coord1_name", nm);
-      saveScore(nm, agg);
-      $("save-feedback").textContent = "Guardado en " + cfg().label + " - " + state.count + " dianas";
-      saveBtn.disabled = true;
-      saveBtn.style.opacity = ".5";
+      saveBtn.disabled = true; saveBtn.style.opacity = ".5";
+      $("save-feedback").textContent = "Guardado";
+      saveScore(nm, agg).catch(function(){ $("save-feedback").textContent = "Guardado en este dispositivo (sin conexion)"; });
     });
   }
 }
@@ -878,52 +915,71 @@ function renderLimite(reason){
       var nm = $("res-name").value.trim().toUpperCase();
       if (!nm) nm = "RDS";
       savedName = nm; safeSet("coord1_name", nm);
-      saveScoreLimite(nm, agg);
-      $("save-feedback").textContent = "Guardado en LIMITE";
       saveBtn.disabled = true; saveBtn.style.opacity = ".5";
+      $("save-feedback").textContent = "Guardado";
+      saveScoreLimite(nm, agg).catch(function(){ $("save-feedback").textContent = "Guardado en este dispositivo (sin conexion)"; });
     });
   }
 }
 
+function numOk(v){ return (typeof v === "number" && isFinite(v)) ? v : 0; }
+
+function pushScore(rec){
+  // respaldo local (offline / sin Firebase)
+  try {
+    var key = lbKey(rec.mode, rec.count);
+    var list = safeGet(key);
+    list.push(rec);
+    if (rec.mode === "limite") list.sort(function(a,b){ if (b.trials !== a.trials) return b.trials - a.trials; return a.avgRT - b.avgRT; });
+    else list.sort(function(a,b){ return a.avgRT - b.avgRT; });
+    if (list.length > 50) list = list.slice(0, 50);
+    safeSet(key, list);
+  } catch (e) {}
+  // ranking global
+  if (window.RDS_DB && window.RDS_DB.ok) return window.RDS_DB.add(rec);
+  return Promise.resolve();
+}
+
 function saveScoreLimite(name, agg){
-  var key = lbKey("limite", 0);
-  var list = safeGet(key);
-  list.push({
+  return pushScore({
+    mode: "limite",
+    count: 0,
     name: name,
-    trials: state.index,
-    avgRT: agg.avgRT ? Math.round(agg.avgRT) : 0,
-    avgPrec: Math.round(agg.avgPrec),
-    index: Math.round(agg.index),
+    avgRT: numOk(agg.avgRT ? Math.round(agg.avgRT) : 0),
+    avgPrec: numOk(Math.round(agg.avgPrec)),
+    index: numOk(Math.round(agg.index)),
+    trials: numOk(state.index),
     date: Date.now()
   });
-  list.sort(function(a,b){ if (b.trials !== a.trials) return b.trials - a.trials; return a.avgRT - b.avgRT; });
-  if (list.length > 20) list = list.slice(0, 20);
-  safeSet(key, list);
 }
 
 function saveScore(name, agg){
-  var key = lbKey(state.mode, state.count);
-  var list = safeGet(key);
-  list.push({
+  return pushScore({
+    mode: state.mode,
+    count: state.count,
     name: name,
-    index: Math.round(agg.index),
-    avgPrec: Math.round(agg.avgPrec),
-    avgRT: agg.avgRT ? Math.round(agg.avgRT) : 0,
-    hits: agg.hits,
-    total: agg.total,
+    avgRT: numOk(agg.avgRT ? Math.round(agg.avgRT) : 0),
+    avgPrec: numOk(Math.round(agg.avgPrec)),
+    index: numOk(Math.round(agg.index)),
+    trials: numOk(state.count),
     date: Date.now()
   });
-  list.sort(function(a,b){ return a.avgRT - b.avgRT; });
-  if (list.length > 20) list = list.slice(0, 20);
-  safeSet(key, list);
 }
 
 // ---------- Ranking ----------
 function renderRanking(){
   var isLim = (rankFilter.mode === "limite");
-  var key = lbKey(rankFilter.mode, rankFilter.count);
-  var list = safeGet(key);
   var host = $("rk-table");
+  var list;
+  if (allScores){
+    list = allScores.filter(function(r){
+      if (r.mode !== rankFilter.mode) return false;
+      if (isLim) return true;
+      return r.count === rankFilter.count;
+    });
+  } else {
+    list = safeGet(lbKey(rankFilter.mode, rankFilter.count));
+  }
   if (!list.length){
     host.innerHTML = '<div class="rk-empty">Sin registros en ' + MODES[rankFilter.mode].label + (isLim ? '' : (' - ' + rankFilter.count)) + ' todavia.</div>';
     return;
@@ -1023,8 +1079,25 @@ function openRanking(){
   hideDups = false;
   var dd = $("rk-dedup");
   if (dd){ dd.textContent = "OCULTAR REPETIDOS"; dd.classList.remove("on"); }
-  renderRanking();
   show("screen-ranking");
+  loadRanking();
+}
+
+function loadRanking(){
+  var host = $("rk-table");
+  if (window.RDS_DB && window.RDS_DB.ok){
+    host.innerHTML = '<div class="rk-empty">Cargando ranking global...</div>';
+    window.RDS_DB.fetchAll().then(function(list){
+      allScores = list;
+      renderRanking();
+    }).catch(function(){
+      allScores = null;
+      host.innerHTML = '<div class="rk-empty">No se pudo cargar el ranking global. Revisa la conexion.</div>';
+    });
+  } else {
+    allScores = null;
+    renderRanking();
+  }
 }
 
 function init(){
