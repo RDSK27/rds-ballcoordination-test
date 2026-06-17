@@ -130,6 +130,8 @@ body{
 #play{display:block;width:100%;height:100%;touch-action:none;}
 .center-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:4;pointer-events:none;text-align:center;}
 .center-msg span{font-weight:900;font-size:40px;letter-spacing:3px;color:var(--rds-red);background:rgba(255,255,255,.6);padding:8px 22px;border-radius:6px;}
+.countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;background:rgba(0,0,0,.32);pointer-events:none;}
+.countdown span{font-weight:900;font-size:88px;letter-spacing:2px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.45);}
 
 /* RESULTS */
 .result-hero{
@@ -154,8 +156,9 @@ body{
 .save-row .rk-btn{background:#fff;color:var(--rds-red);border-left:1px solid #dddddd;font-size:12px;letter-spacing:.5px;padding:0 12px;}
 .save-row button{
   flex:0 0 auto;border:none;border-left:1px solid #dddddd;border-radius:0;background:var(--rds-red);color:#fff;
-  font-weight:900;font-size:14px;letter-spacing:1px;padding:0 16px;cursor:pointer;text-transform:uppercase;
+  font-weight:900;font-size:14px;letter-spacing:1px;padding:14px 16px;cursor:pointer;text-transform:uppercase;
 }
+.save-row #res-save{flex:1;text-align:center;border-left:none;}
 .null-note{
   margin-top:12px;border:1px solid #dddddd;border-radius:0;background:#fff;
   padding:12px;text-align:center;font-size:13px;color:#777777;font-weight:600;
@@ -237,6 +240,7 @@ table.rk tr.top3 td{background:#f7efe7;}
     </div>
     <canvas id="play"></canvas>
     <div class="center-msg" id="center-msg" style="display:none;"><span id="center-msg-txt">PREPARATE</span></div>
+    <div class="countdown" id="countdown" style="display:none;"><span id="countdown-num">3</span></div>
   </section>
 
   <!-- RESULTS -->
@@ -485,10 +489,46 @@ function startGame(){
     state.lastTs = performance.now();
     state.rafId = requestAnimationFrame(loop);
   }
-  // primeras bolas (en Extremo, roja y negra a la vez)
+  startCountdown();
+}
+
+function startCountdown(){
+  state.active = false;
+  state.balls = [];
+  var token = (state.cdToken || 0) + 1;
+  state.cdToken = token;
+  var steps = ["3", "2", "1", "YA"];
+  var i = 0;
+  var cd = $("countdown"), num = $("countdown-num");
+  cd.style.display = "flex";
+  function tick(){
+    if (state.cdToken !== token) return;
+    if (!$("screen-game").classList.contains("active")){ cd.style.display = "none"; return; }
+    if (i >= steps.length){ cd.style.display = "none"; beginPlay(token); return; }
+    num.textContent = steps[i];
+    beepCountdown(steps[i] === "YA");
+    i++;
+    setTimeout(tick, 700);
+  }
+  tick();
+}
+
+function beginPlay(token){
+  if (token !== undefined && state.cdToken !== token) return;
+  if (!$("screen-game").classList.contains("active")) return;
   state.active = true;
+  state.lastTs = performance.now();
   spawnRed();
   if (state.mode === "extremo") spawnBlack();
+}
+
+function beepCountdown(go){
+  if (!audioCtx) return;
+  try {
+    var t = audioCtx.currentTime;
+    if (go) clickNote(740, t, 0.12, 0.24);
+    else clickNote(440, t, 0.10, 0.16);
+  } catch(e){}
 }
 
 function ballSpeed(c, idx){
@@ -502,23 +542,24 @@ function ballSpeed(c, idx){
 function makeBall(kind, idx){
   var c = cfg();
   var r = Math.max(20, minDim() * c.rPct);
-  // posicion de salida
-  var x = CW / 2;
+  // posicion de salida: cualquier punto del borde superior (roja) o inferior (negra)
+  var x = r + Math.random() * (CW - 2 * r);
   var y = (kind === "black") ? (CH - r - 4) : (64 + r + 4);
-  // tope de angulo: que no toque pared lateral antes de cruzar la linea de mira
+  // elegir lado de lanzamiento
+  var side;
+  if (idx < 5){ side = (idx % 2 === 0) ? 1 : -1; }
+  else { side = (Math.random() < 0.5) ? 1 : -1; }
+  // tope de angulo: que no toque la pared de ese lado antes de cruzar la linea de mira
   var lineY = 64 + AIM_LINE_FRAC * (CH - 64);
   var distToLine = Math.max(1, Math.abs(lineY - y));
-  var maxDegLine = Math.atan2(CW/2 - r, distToLine) * 180 / Math.PI * 0.95;
+  var distWall = (side > 0) ? (CW - r - x) : (x - r);
+  if (distWall < 1) distWall = 1;
+  var maxDegLine = Math.atan2(distWall, distToLine) * 180 / Math.PI * 0.95;
   var capDeg = Math.min(ANGLE_MAX, maxDegLine);
   // angulo respecto a la vertical
-  var deg, side;
-  if (idx < 5){
-    deg = Math.min(capDeg, ANGLE_STEP * idx);
-    side = (idx % 2 === 0) ? 1 : -1;
-  } else {
-    deg = Math.random() * capDeg;
-    side = (Math.random() < 0.5) ? 1 : -1;
-  }
+  var deg;
+  if (idx < 5){ deg = Math.min(capDeg, ANGLE_STEP * idx); }
+  else { deg = Math.random() * capDeg; }
   var ang = deg * Math.PI / 180;
   var speed = ballSpeed(c, idx);
   var vy = (kind === "black") ? (-Math.cos(ang) * speed) : (Math.cos(ang) * speed);
@@ -860,8 +901,7 @@ function renderResults(isLimitFail, isNull, nullReason){
   if (agg.total > 0){
     html += '<div class="block-label" style="margin-top:18px;">GUARDAR EN RANKING</div>';
     html += '<div class="save-row">';
-    html += '<input id="res-name" maxlength="10" placeholder="INICIALES" value="' + escapeHtml(savedName) + '">';
-    html += '<button id="res-save">GUARDAR</button>';
+    html += '<button id="res-save">GUARDAR RESULTADO</button>';
     html += '<button id="res-ranking" class="rk-btn">RANKING</button>';
     html += '</div>';
     html += '<div id="save-feedback" class="tag-line"></div>';
@@ -874,11 +914,9 @@ function renderResults(isLimitFail, isNull, nullReason){
   var saveBtn = $("res-save");
   if (saveBtn){
     saveBtn.addEventListener("click", function(){
-      var nm = $("res-name").value.trim().toUpperCase();
-      if (!nm) nm = "RDS";
-      savedName = nm; safeSet("coord1_name", nm);
+      var nm = savedName ? savedName : "RDS";
       saveBtn.disabled = true; saveBtn.style.opacity = ".5";
-      $("save-feedback").textContent = "Guardado";
+      $("save-feedback").textContent = "Guardado: " + nm;
       saveScore(nm, agg).catch(function(){ $("save-feedback").textContent = "Guardado en este dispositivo (sin conexion)"; });
     });
   }
@@ -904,7 +942,7 @@ function renderLimite(reason){
     html += '<div class="chart-card"><canvas id="rt-chart" class="rt-chart"></canvas></div>';
   }
   html += '<div class="block-label" style="margin-top:18px;">GUARDAR EN RANKING</div>';
-  html += '<div class="save-row"><input id="res-name" maxlength="10" placeholder="INICIALES" value="' + escapeHtml(savedName) + '"><button id="res-save">GUARDAR</button><button id="res-ranking" class="rk-btn">RANKING</button></div>';
+  html += '<div class="save-row"><button id="res-save">GUARDAR RESULTADO</button><button id="res-ranking" class="rk-btn">RANKING</button></div>';
   html += '<div id="save-feedback" class="tag-line"></div>';
   pad.innerHTML = html;
   requestAnimationFrame(function(){ drawRTChart("rt-chart", state.trials); });
@@ -912,11 +950,9 @@ function renderLimite(reason){
   var saveBtn = $("res-save");
   if (saveBtn){
     saveBtn.addEventListener("click", function(){
-      var nm = $("res-name").value.trim().toUpperCase();
-      if (!nm) nm = "RDS";
-      savedName = nm; safeSet("coord1_name", nm);
+      var nm = savedName ? savedName : "RDS";
       saveBtn.disabled = true; saveBtn.style.opacity = ".5";
-      $("save-feedback").textContent = "Guardado";
+      $("save-feedback").textContent = "Guardado: " + nm;
       saveScoreLimite(nm, agg).catch(function(){ $("save-feedback").textContent = "Guardado en este dispositivo (sin conexion)"; });
     });
   }
