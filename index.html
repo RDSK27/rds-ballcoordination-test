@@ -24,12 +24,13 @@
   --radius:6px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;height:100%;}
+html,body{margin:0;padding:0;height:100%;overscroll-behavior:none;touch-action:manipulation;background:#000000;}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
-  background:#ffffff;color:var(--rds-ink);overflow:hidden;
+  background:#000000;color:var(--rds-ink);overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
 }
+body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:160px;background:#000000;z-index:-1;pointer-events:none;}
 .app{
   height:100vh;height:100dvh;display:flex;flex-direction:column;
   max-width:560px;margin:0 auto;background:#ffffff;
@@ -55,6 +56,8 @@ body{
 .screen{flex:1 1 auto;display:none;flex-direction:column;min-height:0;}
 .screen.active{display:flex;}
 .pad{padding:12px 16px 18px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#screen-home .pad{display:flex;flex-direction:column;flex:1;padding-top:8px;}
+#screen-home .block-label{margin:8px 0 6px;}
 
 /* SELECTORES SEGMENTADOS */
 .block-label{font-size:11px;letter-spacing:3px;font-weight:700;color:#aaaaaa;text-transform:uppercase;text-align:center;margin:16px 0 7px;}
@@ -91,12 +94,23 @@ body{
 .btn.ghost{background:#fff;color:#666666;border:1px solid #dddddd;font-size:13px;letter-spacing:1.5px;}
 .btn.rank{background:#fff;color:var(--rds-red);border:2px solid var(--rds-red);font-size:14px;}
 #btn-start,#btn-goranking{width:60%;margin-left:auto;margin-right:auto;}
-.home-logo{display:block;width:150px;max-width:46%;height:auto;margin:6px auto 14px;}
+.home-logo{display:block;width:150px;max-width:46%;height:auto;margin:2px auto 6px;}
 .home-name-wrap{width:52%;margin:18px auto 0;display:flex;flex-direction:column;align-items:center;}
 .home-name-input{width:100%;box-sizing:border-box;border:2px solid var(--rds-red);border-radius:5px;padding:8px 10px;text-align:center;font-weight:700;font-size:14px;letter-spacing:1px;color:#111;text-transform:uppercase;background:#fff;}
 .home-name-input:focus{outline:none;}
 .home-name-btn{margin-top:-2px;width:64%;border:none;background:var(--rds-red);color:#fff;font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:5px 0;border-radius:0 0 5px 5px;cursor:pointer;}
 .home-name-btn:active{transform:translateY(1px);}
+.home-name-wrap{order:3;width:44%;margin:8px auto 0;flex-direction:row;align-items:stretch;height:38px;gap:0;}
+.home-ini-input{flex:1;min-width:0;height:100%;box-sizing:border-box;border:2px solid var(--rds-red);border-right:none;border-radius:5px 0 0 5px;text-align:center;font-weight:700;font-size:14px;letter-spacing:1px;color:#111;text-transform:uppercase;background:#fff;padding:0 6px;}
+.home-ini-input:focus{outline:none;}
+.home-sport-select{flex:1;min-width:0;height:100%;box-sizing:border-box;border:2px solid var(--rds-red);border-radius:0 5px 5px 0;font-weight:700;font-size:12px;color:#111;background:#fff;padding:0 8px;-webkit-appearance:none;appearance:none;}
+.home-sport-select:focus{outline:none;}
+.home-name-wrap .home-name-btn{margin-top:0;height:100%;width:auto;flex:0 0 auto;padding:0 14px;border-radius:0 5px 5px 0;font-size:11px;}
+#btn-start{order:1;width:66%;height:38px;padding:0;margin:0 auto 0;background:var(--rds-red);color:#fff;box-shadow:0 3px 10px rgba(176,48,32,.4);display:flex;align-items:center;justify-content:center;}
+#btn-start:active{box-shadow:0 2px 8px rgba(0,0,0,.2);}
+#btn-goranking{order:2;width:58%;height:38px;padding:0;margin:8px auto 0;display:flex;align-items:center;justify-content:center;}
+.home-bottom{margin:auto -16px calc(-18px - env(safe-area-inset-bottom, 0px));background:#000;border-top:4px solid var(--rds-red);padding:18px 16px calc(20px + env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column;align-items:center;}
+.home-bottom .tag-line{color:#cccccc;order:4;}
 .mode-desc{
   background:#fff;border:1px solid #dddddd;border-radius:4px;
   padding:9px 12px;font-size:12px;line-height:1.35;margin-top:9px;color:#555555;text-align:center;
@@ -211,19 +225,20 @@ table.rk tr.top3 td{background:#f7efe7;}
       <div id="count-section">
         <div class="block-label">NUMERO DE ENSAYOS</div>
         <div class="opt-row three" id="count-row">
-          <div class="opt" data-count="15">15</div>
-          <div class="opt sel" data-count="30">30</div>
+          <div class="opt sel" data-count="15">15</div>
+          <div class="opt" data-count="30">30</div>
           <div class="opt" data-count="50">50</div>
         </div>
       </div>
 
-      <button class="btn primary" id="btn-start" style="margin-top:16px;">INICIAR TEST</button>
-      <button class="btn rank" id="btn-goranking">&#127942; RANKING</button>
+      <div class="home-bottom">
       <div class="home-name-wrap">
-        <input id="home-name" class="home-name-input" maxlength="10" placeholder="TU NOMBRE" autocomplete="off">
-        <button id="home-name-save" class="home-name-btn">GUARDAR</button>
+        <input id="home-initials" class="home-ini-input" maxlength="3" placeholder="INI" autocomplete="off" oninput="this.value=this.value.replace(/[^A-Za-z]/g,'').toUpperCase()">
+        <select id="home-sport" class="home-sport-select"><option value="ATL">Atletismo</option><option value="AUT">Automovilismo</option><option value="BMT">B&#225;dminton</option><option value="BLC">Baloncesto</option><option value="BLM">Balonmano</option><option value="BOX">Boxeo</option><option value="CIC">Ciclismo</option><option value="ESC">Escalada</option><option value="ESG">Esgrima</option><option value="ESQ">Esqu&#237;</option><option value="FTB">F&#250;tbol</option><option value="GIM">Gimnasia</option><option value="GLF">Golf</option><option value="HAL">Halterofilia</option><option value="HCK">Hockey</option><option value="JUD">Judo</option><option value="KRT">Karate</option><option value="MOT">Motociclismo</option><option value="NTC">Nataci&#243;n</option><option value="OTR" selected>Otros</option><option value="PAD">P&#225;del</option><option value="PRG">Pirag&#252;ismo</option><option value="REM">Remo</option><option value="RUG">Rugby</option><option value="SRF">Surf</option><option value="TKD">Taekwondo</option><option value="TNS">Tenis</option><option value="TRI">Triatl&#243;n</option><option value="VOL">Voleibol</option></select>
       </div>
-      <div class="tag-line">RDS Psicologia Deportiva - Test de Coordinacion</div>
+      <button class="btn primary" id="btn-start">INICIAR TEST</button>
+      <button class="btn rank" id="btn-goranking">&#127942; RANKING</button>
+      </div>
     </div>
   </section>
 
@@ -331,19 +346,21 @@ var LIMITE_ACCEL = 0.05; // modo limite: la velocidad sube un 5% por cada ensayo
 var TRAIL_LEN = 14;      // numero de posiciones guardadas para la estela
 var BEST_RT = 250;       // ms -> velocidad 1.0
 var WORST_RT = 1500;     // ms -> velocidad 0.0
+var MACHINEGUN_TAPS = 3;   // toques seguidos para detectar metralleta
+var MACHINEGUN_MS = 400;   // ventana en ms para esos toques
 
 var MODES = {
   normal: {
     label: "NORMAL",
     red: false,
     desc: "Intercepta la diana en movimiento lo mas rapido y centrado posible. Si pulsas fuera de la diana, el ejercicio se anula.",
-    rPct: 0.100, speedPct: 0.95, hitFactor: 1.45
+    rPct: 0.100, speedPct: 1.20, hitFactor: 1.45
   },
   extremo: {
     label: "EXTREMO",
     red: false,
-    desc: "Como el modo Normal, pero salen dos bolas a la vez: una roja desde arriba y una negra desde abajo. Cada nueva sale al pulsar la anterior de su color. En modo N salen N rojas y N negras.",
-    rPct: 0.100, speedPct: 0.95, hitFactor: 1.45
+    desc: "Como el modo Normal, pero salen dos bolas a la vez: una roja desde arriba y una negra desde abajo. La siguiente pareja no sale hasta que has pulsado las dos. En modo N salen N rojas y N negras.",
+    rPct: 0.100, speedPct: 1.20, hitFactor: 1.45
   },
   limite: {
     label: "LIMITE",
@@ -357,7 +374,7 @@ var MODES = {
 // ---------- Estado ----------
 var state = {
   mode: "normal",
-  count: 30,
+  count: 15,
   trials: [],
   index: 0,
   balls: [],
@@ -372,6 +389,20 @@ var state = {
 
 var rankFilter = { mode: "normal", count: 30 };
 var savedName = "";
+function buildPlayerName(ini, dep){
+  var i = (ini || "").trim().toUpperCase().replace(/[^A-Z]/g, "").slice(0,3);
+  if (!i) i = "RDS";
+  return i + "-" + (dep || "OTR");
+}
+function limitPerName(list, maxPer){
+  var counts = {}, out = [];
+  for (var i=0;i<list.length;i++){
+    var k = "k_" + ((list[i].name || "").toUpperCase());
+    var n = counts[k] || 0;
+    if (n < maxPer){ counts[k] = n + 1; out.push(list[i]); }
+  }
+  return out;
+}
 var hideDups = false;
 var allScores = null;
 var lastPlayed = null;
@@ -480,6 +511,7 @@ function startGame(){
   state.redCount = 0;
   state.blackCount = 0;
   state.balls = [];
+  state.tapTimes = [];
   state.active = false;
   show("screen-game");
   resizeCanvas();
@@ -665,6 +697,12 @@ function handleTap(clientX, clientY){
   var py = clientY - rect.top;
   var now = performance.now();
 
+  // anti-metralleta: varios toques muy seguidos anulan el ejercicio
+  if (!state.tapTimes) state.tapTimes = [];
+  state.tapTimes.push(now);
+  while (state.tapTimes.length && now - state.tapTimes[0] > MACHINEGUN_MS) state.tapTimes.shift();
+  if (state.tapTimes.length >= MACHINEGUN_TAPS){ annulGame("metralleta"); return; }
+
   // buscar la bola tocada (la mas cercana dentro de su zona)
   var hitBall = null, hitIdx = -1, bestDist = Infinity, bestPrec = 0;
   for (var i = 0; i < state.balls.length; i++){
@@ -709,11 +747,10 @@ function advanceStream(kind){
     checkFinish();
     return;
   }
-  // extremo: dos colores independientes
-  if (kind === "red"){
-    if (state.redCount < state.count) spawnRed();
-  } else {
-    if (state.blackCount < state.count) spawnBlack();
+  // extremo: pareja obligatoria; la siguiente pareja solo sale al pulsar las dos
+  if (state.balls.length === 0 && state.redCount < state.count){
+    spawnRed();
+    spawnBlack();
   }
   checkFinish();
 }
@@ -815,6 +852,11 @@ function finishGame(){
   renderResults(false, false);
   show("screen-results");
 }
+function annulGame(reason){
+  stopLoop();
+  renderResults(false, true, reason);
+  show("screen-results");
+}
 function endLimite(reason){
   stopLoop();
   renderLimite(reason); // siempre hay resultado en modo Limite
@@ -870,7 +912,10 @@ function renderResults(isLimitFail, isNull, nullReason){
   if (isNull){
     var validN = state.index;
     var totalN = state.count;
-    var sub = (nullReason === "floor") ? "La bola ha llegado al borde inferior y se ha detenido" : "Has pulsado fuera de la diana";
+    var sub;
+    if (nullReason === "floor") sub = "La bola ha llegado al borde inferior y se ha detenido";
+    else if (nullReason === "metralleta") sub = "Se han detectado pulsaciones demasiado rapidas seguidas";
+    else sub = "Has pulsado fuera de la diana";
     html += '<div class="result-hero fail">';
     html += '<div class="big" style="font-size:34px;line-height:1.05;">EJERCICIO ANULADO</div>';
     html += '<div class="lbl">' + sub + '</div>';
@@ -1035,6 +1080,8 @@ function renderRanking(){
     }
     list = uniq;
   }
+  // maximo 3 por nombre (sus 3 mejores marcas), en local y global
+  list = limitPerName(list, 3);
   var html;
   if (isLim){
     html = '<table class="rk"><thead><tr><th>#</th><th>Nombre</th><th>Ensayos</th><th>Reaccion</th><th>Prec</th></tr></thead><tbody>';
@@ -1163,18 +1210,24 @@ function init(){
   $("btn-start").addEventListener("click", startGame);
   $("btn-goranking").addEventListener("click", openRanking);
 
-  // nombre guardado para el ranking (se precarga en resultados)
-  var sn = safeGet("coord1_name");
-  savedName = (typeof sn === "string") ? sn : "";
-  if (savedName) $("home-name").value = savedName;
-  $("home-name-save").addEventListener("click", function(){
-    savedName = $("home-name").value.trim().toUpperCase();
-    $("home-name").value = savedName;
+  // nombre para el ranking: iniciales + deporte -> INI-DEP
+  var sIni = safeGet("coord1_initials");
+  var sDep = safeGet("coord1_sport");
+  var savedIni = (typeof sIni === "string") ? sIni : "";
+  var savedDep = (typeof sDep === "string" && sDep) ? sDep : "OTR";
+  if (savedIni) $("home-initials").value = savedIni;
+  $("home-sport").value = savedDep;
+  savedName = buildPlayerName(savedIni, savedDep);
+  function persistPlayerName(){
+    var ini = ($("home-initials").value || "").trim().toUpperCase().replace(/[^A-Z]/g, "").slice(0,3);
+    var dep = $("home-sport").value || "OTR";
+    savedName = buildPlayerName(ini, dep);
+    safeSet("coord1_initials", ini);
+    safeSet("coord1_sport", dep);
     safeSet("coord1_name", savedName);
-    var b = $("home-name-save");
-    b.textContent = "GUARDADO";
-    setTimeout(function(){ b.textContent = "GUARDAR"; }, 1200);
-  });
+  }
+  $("home-initials").addEventListener("input", persistPlayerName);
+  $("home-sport").addEventListener("change", persistPlayerName);
 
   $("hud-home").addEventListener("click", function(){ stopLoop(); show("screen-home"); });
   $("hud-repeat").addEventListener("click", function(){ stopLoop(); startGame(); });
@@ -1199,6 +1252,11 @@ function init(){
   var c = $("play");
   c.addEventListener("touchstart", onTouch, { passive:false });
   c.addEventListener("mousedown", onMouse);
+  document.addEventListener("gesturestart", function(e){ e.preventDefault(); }, { passive:false });
+  document.addEventListener("gesturechange", function(e){ e.preventDefault(); }, { passive:false });
+  document.addEventListener("gestureend", function(e){ e.preventDefault(); }, { passive:false });
+  var __gs = document.getElementById("screen-game");
+  if (__gs) __gs.addEventListener("touchmove", function(e){ e.preventDefault(); }, { passive:false });
 
   refreshModeDesc();
 }

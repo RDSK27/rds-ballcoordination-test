@@ -2,7 +2,7 @@
 // Uso sin conexion: cachea la app y el SDK de Firebase (gstatic).
 // Las llamadas de datos a Firestore NO se cachean (las gestiona la
 // persistencia offline de Firestore).
-var CACHE = "coord1-v6";
+var CACHE = "coord1-v29";
 var ASSETS = [
   "./",
   "./index.html",
