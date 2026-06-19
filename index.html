@@ -31,6 +31,10 @@ body{
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
 }
 body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:160px;background:#000000;z-index:-1;pointer-events:none;}
+#finish-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#111;flex-direction:column;align-items:center;justify-content:center;}
+#finish-overlay.active{display:flex;}
+#finish-overlay .finish-box{border-top:4px solid var(--rds-red);border-bottom:4px solid var(--rds-red);padding:22px 0;width:80%;max-width:420px;text-align:center;}
+#finish-overlay .finish-text{color:#fff;font-weight:900;font-size:22px;letter-spacing:3px;text-transform:uppercase;}
 .app{
   height:100vh;height:100dvh;display:flex;flex-direction:column;
   max-width:560px;margin:0 auto;background:#ffffff;
@@ -93,6 +97,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:160px;backg
 .btn.blue{background:var(--rds-red);color:#fff;}
 .btn.ghost{background:#fff;color:#666666;border:1px solid #dddddd;font-size:13px;letter-spacing:1.5px;}
 .btn.rank{background:#fff;color:var(--rds-red);border:2px solid var(--rds-red);font-size:14px;}
+#res-home,#res-again,#rk-home,#rk-repeat{background:#111;color:#fff;border:none;}
 #btn-start,#btn-goranking{width:60%;margin-left:auto;margin-right:auto;}
 .home-logo{display:block;width:150px;max-width:46%;height:auto;margin:2px auto 6px;}
 .home-name-wrap{width:52%;margin:18px auto 0;display:flex;flex-direction:column;align-items:center;}
@@ -847,10 +852,18 @@ function stopLoop(){
   if (state.rafId) cancelAnimationFrame(state.rafId);
 }
 
+function showFinishTransition(){
+  var ov = $("finish-overlay");
+  if (ov) ov.classList.add("active");
+  setTimeout(function(){
+    if (ov) ov.classList.remove("active");
+    show("screen-results");
+  }, 1000);
+}
 function finishGame(){
   stopLoop();
   renderResults(false, false);
-  show("screen-results");
+  showFinishTransition();
 }
 function annulGame(reason){
   stopLoop();
@@ -860,7 +873,7 @@ function annulGame(reason){
 function endLimite(reason){
   stopLoop();
   renderLimite(reason); // siempre hay resultado en modo Limite
-  show("screen-results");
+  showFinishTransition();
 }
 
 // ---------- Render resultados ----------
@@ -1277,5 +1290,6 @@ if ("serviceWorker" in navigator) {
   });
 }
 </script>
+<div id="finish-overlay"><div class="finish-box"><div class="finish-text">EJERCICIO FINALIZADO</div></div></div>
 </body>
 </html>
