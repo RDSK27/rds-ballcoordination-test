@@ -2,7 +2,7 @@
 // Uso sin conexion: cachea la app y el SDK de Firebase (gstatic).
 // Las llamadas de datos a Firestore NO se cachean (las gestiona la
 // persistencia offline de Firestore).
-var CACHE = "coord1-v32";
+var CACHE = "coord1-v33";
 var ASSETS = [
   "./",
   "./index.html",
@@ -13,8 +13,13 @@ self.addEventListener("install", function(e){
   e.waitUntil(
     caches.open(CACHE)
       .then(function(c){ return c.addAll(ASSETS); })
-      .then(function(){ return self.skipWaiting(); })
   );
+});
+
+self.addEventListener("message", function(e){
+  if (e.data && e.data.action === "skipWaiting") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", function(e){
