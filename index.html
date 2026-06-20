@@ -82,6 +82,9 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:160px;backg
 .btn.ghost.on{background:var(--rds-red);color:#fff;}
 #count-row.locked .opt{visibility:hidden;border-right-color:transparent;background:transparent;}
 #count-row.locked .opt.sel{visibility:visible;background:var(--rds-red);border-radius:6px;}
+.opt-row.locked-fallos{pointer-events:none;}
+.opt-row.locked-fallos .opt{opacity:.4;}
+.opt-row.locked-fallos .opt.sel{opacity:1;}
 .opt .inf-g{display:inline-block;transform:scale(2.3);font-weight:900;}
 
 /* BOTONES */
@@ -136,8 +139,14 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:160px;backg
 .hud .badge.mode{background:var(--rds-red);color:#fff;border-color:var(--rds-red);}
 .hud .badge.mode.red{background:var(--rds-red);}
 .hud .spacer{flex:1;}
+.hud .lives{display:flex;gap:6px;align-items:center;}
+.hud .life{width:12px;height:12px;border-radius:50%;background:var(--rds-red);box-shadow:0 0 4px rgba(176,48,32,.5);transition:opacity .1s ease,background .2s ease;}
+.hud .life.lost{background:#dddddd;box-shadow:none;opacity:.45;}
+.hud .life.blink-off{opacity:0;}
 .hud .stat{font-weight:900;font-size:15px;letter-spacing:1px;text-align:center;line-height:1;}
-.hud .stat small{display:block;font-size:9px;color:#999999;letter-spacing:.5px;font-weight:700;}
+.hud .stat small{display:none;font-size:9px;color:#999999;letter-spacing:.5px;font-weight:700;}
+#screen-game.lim #stat-trial{display:none;}
+#screen-game.lim #stat-idx{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;pointer-events:none;}
 .hud .exit{
   font-weight:900;font-size:13px;letter-spacing:1px;
   padding:5px 10px;border:none;border-radius:4px;background:var(--rds-red);color:#fff;cursor:pointer;
@@ -235,6 +244,13 @@ table.rk tr.top3 td{background:#f7efe7;}
           <div class="opt" data-count="50">50</div>
         </div>
       </div>
+      <div id="fallos-section">
+        <div class="block-label">FALLOS</div>
+        <div class="opt-row two" id="fallos-row">
+          <div class="opt sel" data-pen="0">NO PENALIZAN</div>
+          <div class="opt" data-pen="1">PENALIZAN</div>
+        </div>
+      </div>
 
       <div class="home-bottom">
       <div class="home-name-wrap">
@@ -251,10 +267,11 @@ table.rk tr.top3 td{background:#f7efe7;}
   <section id="screen-game" class="screen">
     <div class="hud">
       <div class="badge mode" id="hud-home">&larr; INICIO</div>
+      <div class="stat" id="stat-trial"><span id="hud-trial">--</span><small id="hud-trial-lbl">MEDIA MS</small></div>
       <div class="spacer"></div>
-      <div class="stat"><span id="hud-trial">--</span><small id="hud-trial-lbl">MEDIA MS</small></div>
-      <div class="stat"><span id="hud-idx">--</span><small id="hud-idx-lbl">INDICE</small></div>
+      <div class="lives" id="hud-lives"><span class="life"></span><span class="life"></span><span class="life"></span></div>
       <div class="spacer"></div>
+      <div class="stat" id="stat-idx"><span id="hud-idx">--</span><small id="hud-idx-lbl">INDICE</small></div>
       <div class="exit" id="hud-repeat">&#8635; REPETIR</div>
       <div class="hud-progress" id="hud-progress"><div id="game-progress-fill"></div></div>
     </div>
@@ -380,6 +397,7 @@ var MODES = {
 var state = {
   mode: "normal",
   count: 15,
+  penaliza: false,
   trials: [],
   index: 0,
   balls: [],
@@ -517,6 +535,12 @@ function startGame(){
   state.blackCount = 0;
   state.balls = [];
   state.tapTimes = [];
+  state.fails = 0;
+  var penalizaOn = (state.mode !== "limite") && state.penaliza;
+  state.maxLives = penalizaOn ? ((state.mode === "extremo") ? 5 : 3) : 0;
+  $("screen-game").classList.toggle("lim", state.mode === "limite");
+  renderLives();
+  updateLives();
   state.active = false;
   show("screen-game");
   resizeCanvas();
@@ -722,9 +746,14 @@ function handleTap(clientX, clientY){
   }
 
   if (!hitBall){
-    // fallo: NO termina. La bola sigue en pantalla hasta que se acierte.
+    // fallo: tocar fuera de la bola (antes/despues). Descuenta una vida.
     soundMiss();
     flashTap(px, py, false);
+    if (state.maxLives > 0){
+      state.fails = (state.fails || 0) + 1;
+      updateLives();
+      if (state.fails >= state.maxLives){ endByFails(); }
+    }
     return;
   }
 
@@ -852,16 +881,53 @@ function stopLoop(){
   if (state.rafId) cancelAnimationFrame(state.rafId);
 }
 
-function showFinishTransition(){
+function showFinishTransition(msg){
   var ov = $("finish-overlay");
-  if (ov) ov.classList.add("active");
+  if (ov){
+    var txt = ov.querySelector(".finish-text");
+    if (txt) txt.textContent = msg || "EJERCICIO FINALIZADO";
+    ov.classList.add("active");
+  }
   setTimeout(function(){
     if (ov) ov.classList.remove("active");
     show("screen-results");
   }, 1000);
 }
+function endByFails(){
+  stopLoop();
+  state.noSave = true;
+  renderResults(false, false);
+  showFinishTransition("EJERCICIO FINALIZADO POR DEMASIADOS FALLOS");
+}
+function renderLives(){
+  var lv = $("hud-lives");
+  if (!lv) return;
+  var n = state.maxLives || 0;
+  var html = "";
+  for (var i = 0; i < n; i++) html += '<span class="life"></span>';
+  lv.innerHTML = html;
+}
+function updateLives(){
+  var lv = $("hud-lives");
+  if (!lv) return;
+  var dots = lv.querySelectorAll(".life");
+  var f = state.fails || 0;
+  var remaining = dots.length - f;
+  for (var i = 0; i < dots.length; i++){
+    dots[i].classList.toggle("lost", (i >= dots.length - f));
+    dots[i].classList.remove("blink-off");
+  }
+  if (state.blinkTimer){ clearInterval(state.blinkTimer); state.blinkTimer = null; }
+  if (remaining === 1){
+    var dot = dots[0];
+    state.blinkTimer = setInterval(function(){
+      if (dot) dot.classList.toggle("blink-off");
+    }, 180);
+  }
+}
 function finishGame(){
   stopLoop();
+  state.noSave = false;
   renderResults(false, false);
   showFinishTransition();
 }
@@ -959,7 +1025,7 @@ function renderResults(isLimitFail, isNull, nullReason){
   if (agg.total > 0){
     html += '<div class="block-label" style="margin-top:18px;">GUARDAR EN RANKING</div>';
     html += '<div class="save-row">';
-    html += '<button id="res-save">GUARDAR RESULTADO</button>';
+    html += '<button id="res-save"' + (state.noSave ? ' disabled style="opacity:.4;cursor:default;"' : '') + '>GUARDAR RESULTADO</button>';
     html += '<button id="res-ranking" class="rk-btn">RANKING</button>';
     html += '</div>';
     html += '<div id="save-feedback" class="tag-line"></div>';
@@ -970,7 +1036,7 @@ function renderResults(isLimitFail, isNull, nullReason){
 
   var rkBtn = $("res-ranking"); if (rkBtn) rkBtn.addEventListener("click", openRanking);
   var saveBtn = $("res-save");
-  if (saveBtn){
+  if (saveBtn && !state.noSave){
     saveBtn.addEventListener("click", function(){
       var nm = savedName ? savedName : "RDS";
       saveBtn.disabled = true; saveBtn.style.opacity = ".5";
@@ -978,6 +1044,7 @@ function renderResults(isLimitFail, isNull, nullReason){
       saveScore(nm, agg).catch(function(){ $("save-feedback").textContent = "Guardado en este dispositivo (sin conexion)"; });
     });
   }
+  if (state.noSave && $("save-feedback")) $("save-feedback").textContent = "No se guarda por demasiados fallos";
 }
 
 function renderLimite(reason){
@@ -1149,6 +1216,16 @@ function refreshModeDesc(){
   var el = $("mode-desc");
   if (el) el.innerHTML = MODES[state.mode].desc;
 }
+function applyLimiteFallosUI(isLim){
+  var row = $("fallos-row");
+  if (!row) return;
+  row.classList.toggle("locked-fallos", isLim);
+  if (isLim){
+    var opts = row.querySelectorAll(".opt");
+    for (var i=0;i<opts.length;i++){ opts[i].classList.toggle("sel", opts[i].getAttribute("data-pen") === "0"); }
+    state.penaliza = false;
+  }
+}
 function applyLimiteCountUI(isLim){
   var row = $("count-row");
   if (!row) return;
@@ -1210,12 +1287,15 @@ function init(){
   });
 
   applyLimiteCountUI(state.mode === "limite");
+  applyLimiteFallosUI(state.mode === "limite");
   bindSelector("mode-row", "data-mode", function(v){
     state.mode = v;
     refreshModeDesc();
     applyLimiteCountUI(v === "limite");
+    applyLimiteFallosUI(v === "limite");
   });
   bindSelector("count-row", "data-count", function(v){ state.count = parseInt(v,10); });
+  bindSelector("fallos-row", "data-pen", function(v){ state.penaliza = (v === "1"); });
 
   bindSelector("rk-mode", "data-mode", function(v){ rankFilter.mode = v; $("rk-count").style.display = (v === "limite") ? "none" : ""; renderRanking(); });
   bindSelector("rk-count", "data-count", function(v){ rankFilter.count = parseInt(v,10); renderRanking(); });
