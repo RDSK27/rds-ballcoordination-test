@@ -1,83 +1,53 @@
-var CACHE = 'rds-reaction-v17';
-
-var PRECACHE = [
-  '/rds-reaction-test/',
-  '/rds-reaction-test/index.html',
-  '/rds-reaction-test/manifest.json',
-  '/rds-reaction-test/icon.jpg'
+// Service Worker - Ball Coordination Test (RDS)
+// Uso sin conexion: cachea la app y el SDK de Firebase (gstatic).
+// Las llamadas de datos a Firestore NO se cachean (las gestiona la
+// persistencia offline de Firestore).
+var CACHE = "coord1-v59";
+var ASSETS = [
+  "./",
+  "./index.html",
+  "./manifest.json"
 ];
 
-var NO_CACHE = [
-  'firestore.googleapis.com',
-  'firebase.googleapis.com',
-  'gstatic.com'
-];
-
-self.addEventListener('install', function(e){
+self.addEventListener("install", function(e){
   e.waitUntil(
-    caches.open(CACHE).then(function(c){
-      return Promise.allSettled(
-        PRECACHE.map(function(url){
-          return c.add(url).catch(function(){});
-        })
-      );
-    })
+    caches.open(CACHE)
+      .then(function(c){ return c.addAll(ASSETS); })
   );
-  self.skipWaiting();
 });
 
-self.addEventListener('message', function(e){
-  if(e.data && e.data.action === 'skipWaiting') self.skipWaiting();
+self.addEventListener("message", function(e){
+  if (e.data && e.data.action === "skipWaiting") {
+    self.skipWaiting();
+  }
 });
 
-self.addEventListener('activate', function(e){
+self.addEventListener("activate", function(e){
   e.waitUntil(
     caches.keys().then(function(keys){
-      return Promise.all(
-        keys.filter(function(k){ return k !== CACHE; })
-            .map(function(k){ return caches.delete(k); })
-      );
-    })
+      return Promise.all(keys.map(function(k){
+        if (k !== CACHE) return caches.delete(k);
+      }));
+    }).then(function(){ return self.clients.claim(); })
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', function(e){
+self.addEventListener("fetch", function(e){
+  if (e.request.method !== "GET") return;
   var url = e.request.url;
-  for(var i=0; i<NO_CACHE.length; i++){
-    if(url.indexOf(NO_CACHE[i]) > -1) return;
-  }
-
-  // Network-first para la navegacion (el HTML): siempre intenta traer la version nueva.
-  if(e.request.mode === 'navigate'){
-    e.respondWith(
-      fetch(e.request).then(function(res){
-        if(res && res.status === 200){
-          var clone = res.clone();
-          caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
-        }
-        return res;
-      }).catch(function(){
-        return caches.match(e.request).then(function(cached){
-          return cached || caches.match('/rds-reaction-test/index.html');
-        });
-      })
-    );
-    return;
-  }
-
-  // Cache-first para el resto de recursos estaticos.
+  var cacheable = (url.indexOf(self.location.origin) === 0) ||
+                  (url.indexOf("https://www.gstatic.com/") === 0);
   e.respondWith(
     caches.match(e.request).then(function(cached){
-      if(cached) return cached;
-      return fetch(e.request).then(function(res){
-        if(res && res.status === 200){
-          var clone = res.clone();
-          caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
+      if (cached) return cached;
+      return fetch(e.request).then(function(resp){
+        if (cacheable){
+          var clone = resp.clone();
+          caches.open(CACHE).then(function(c){ try { c.put(e.request, clone); } catch(err){} });
         }
-        return res;
+        return resp;
       }).catch(function(){
-        return caches.match('/rds-reaction-test/index.html');
+        if (e.request.mode === "navigate") return caches.match("./index.html");
       });
     })
   );
