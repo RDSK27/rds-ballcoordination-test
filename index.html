@@ -1415,6 +1415,10 @@ if ("serviceWorker" in navigator) {
   });
   window.addEventListener("load", function(){
     navigator.serviceWorker.register("sw.js").then(function(reg){
+      reg.update();
+      document.addEventListener("visibilitychange", function(){
+        if (document.visibilityState === "visible") reg.update();
+      });
       if (reg.waiting && navigator.serviceWorker.controller) {
         reg.waiting.postMessage({action:"skipWaiting"});
       }

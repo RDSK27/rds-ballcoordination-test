@@ -1,8 +1,8 @@
 // Service Worker - Ball Coordination Test (RDS)
-// Uso sin conexion: cachea la app y el SDK de Firebase (gstatic).
-// Las llamadas de datos a Firestore NO se cachean (las gestiona la
-// persistencia offline de Firestore).
-var CACHE = "coord1-v62";
+// Documento HTML / navegacion: network-first (siempre la ultima version con conexion).
+// Resto de assets same-origin + SDK de Firebase (gstatic): cache-first.
+// Las llamadas de datos a Firestore NO se cachean (persistencia offline de Firestore).
+var CACHE = "coord1-v63";
 var ASSETS = [
   "./",
   "./index.html",
@@ -10,9 +10,9 @@ var ASSETS = [
 ];
 
 self.addEventListener("install", function(e){
+  self.skipWaiting();
   e.waitUntil(
-    caches.open(CACHE)
-      .then(function(c){ return c.addAll(ASSETS); })
+    caches.open(CACHE).then(function(c){ return c.addAll(ASSETS); })
   );
 });
 
@@ -35,6 +35,22 @@ self.addEventListener("activate", function(e){
 self.addEventListener("fetch", function(e){
   if (e.request.method !== "GET") return;
   var url = e.request.url;
+
+  // Documento / navegacion: network-first para servir siempre la ultima version
+  if (e.request.mode === "navigate") {
+    e.respondWith(
+      fetch(e.request).then(function(resp){
+        var clone = resp.clone();
+        caches.open(CACHE).then(function(c){ try { c.put("./index.html", clone); } catch(err){} });
+        return resp;
+      }).catch(function(){
+        return caches.match("./index.html").then(function(c){ return c || caches.match("./"); });
+      })
+    );
+    return;
+  }
+
+  // Resto: cache-first (assets same-origin y SDK de Firebase en gstatic)
   var cacheable = (url.indexOf(self.location.origin) === 0) ||
                   (url.indexOf("https://www.gstatic.com/") === 0);
   e.respondWith(
@@ -46,8 +62,6 @@ self.addEventListener("fetch", function(e){
           caches.open(CACHE).then(function(c){ try { c.put(e.request, clone); } catch(err){} });
         }
         return resp;
-      }).catch(function(){
-        if (e.request.mode === "navigate") return caches.match("./index.html");
       });
     })
   );
