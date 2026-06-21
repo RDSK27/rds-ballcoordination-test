@@ -203,6 +203,9 @@ table.rk tr.top3 td{background:#f7efe7;}
 .footer-actions{flex:0 0 auto;padding:12px 16px;border-top:1px solid #e0e0e0;background:#fff;}
 .foot2{display:flex;gap:10px;}
 .foot2 .btn{margin:0;flex:1;width:auto;}
+.results-actions{display:flex;flex-direction:row;gap:0;width:100%;z-index:10;border-top:4px solid #b03020;margin-top:auto;}
+.game-ctrl-btn{flex:1;padding:13px;background:#111;color:#fff;border:1px solid #333;border-right:none;font-size:0.82rem;font-weight:900;letter-spacing:0.12em;cursor:pointer;text-transform:uppercase;display:flex;align-items:center;justify-content:center;}
+.game-ctrl-btn:last-child{border-right:1px solid #ddd;}
 .tag-line{text-align:center;font-size:10px;color:#cccccc;letter-spacing:1.5px;margin-top:16px;text-transform:uppercase;font-weight:600;}
 </style>
 </head>
@@ -275,11 +278,9 @@ table.rk tr.top3 td{background:#f7efe7;}
   <!-- RESULTS -->
   <section id="screen-results" class="screen">
     <div class="pad" id="results-pad"></div>
-    <div class="footer-actions">
-      <div class="foot2">
-        <button class="btn ghost" id="res-home">&larr; INICIO</button>
-        <button class="btn blue" id="res-again">&#8635; REPETIR</button>
-      </div>
+    <div class="results-actions">
+      <button class="game-ctrl-btn" onclick="goHome()">&#8592; Inicio</button>
+      <button class="game-ctrl-btn" style="border-right:none;border-left:1px solid #333;" onclick="repeatTest()">&#8634; Repetir</button>
     </div>
   </section>
 
@@ -299,12 +300,14 @@ table.rk tr.top3 td{background:#f7efe7;}
       </div>
       <div id="rk-table"></div>
     </div>
-    <div class="footer-actions">
-      <div class="foot2">
-        <button class="btn ghost" id="rk-home">&larr; INICIO</button>
-        <button class="btn ghost" id="rk-repeat">REPETIR</button>
+    <div class="footer-actions" style="padding:0;border-top:none;margin-top:auto;">
+      <div style="padding:12px 16px 0;">
+        <button class="btn ghost" id="rk-dedup">OCULTAR REPETIDOS</button>
       </div>
-      <button class="btn ghost" id="rk-dedup" style="margin-top:8px;">OCULTAR REPETIDOS</button>
+      <div class="results-actions" style="margin-top:0;">
+        <button class="game-ctrl-btn" onclick="goHome()">&#8592; Inicio</button>
+        <button class="game-ctrl-btn" style="border-right:none;border-left:1px solid #333;" onclick="repeatTest()">&#8634; Repetir</button>
+      </div>
     </div>
   </section>
 
@@ -1315,6 +1318,9 @@ function loadRanking(){
   }
 }
 
+function goHome(){ stopLoop(); show("screen-home"); }
+function repeatTest(){ stopLoop(); if (lastPlayed){ state.mode = lastPlayed.mode; state.count = lastPlayed.count; } startGame(); }
+
 function init(){
   setupCanvas();
 
@@ -1367,14 +1373,6 @@ function init(){
   $("hud-home").addEventListener("click", function(){ stopLoop(); show("screen-home"); });
   $("hud-repeat").addEventListener("click", function(){ stopLoop(); startGame(); });
 
-  $("res-again").addEventListener("click", startGame);
-  $("res-home").addEventListener("click", function(){ show("screen-home"); });
-
-  $("rk-home").addEventListener("click", function(){ show("screen-home"); });
-  $("rk-repeat").addEventListener("click", function(){
-    if (lastPlayed){ state.mode = lastPlayed.mode; state.count = lastPlayed.count; }
-    startGame();
-  });
   $("rk-dedup").addEventListener("click", function(){
     hideDups = !hideDups;
     var b = $("rk-dedup");
