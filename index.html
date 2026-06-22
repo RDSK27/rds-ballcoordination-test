@@ -123,7 +123,7 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .hud{
   position:absolute;top:0;left:0;right:0;z-index:5;
   display:flex;align-items:center;gap:8px;padding:8px 12px;
-  background:rgba(255,255,255,.94);border-bottom:1px solid #dddddd;
+  background:rgba(255,255,255,.94);border-bottom:3px solid #111111;
 }
 .hud .badge{
   font-weight:900;font-size:15px;letter-spacing:1px;
@@ -150,6 +150,8 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .chart-card{border:1px solid #dddddd;background:#fff;padding:8px 8px 4px;margin-top:8px;}
 .rt-chart{width:100%;height:150px;display:block;}
 #play{display:block;width:100%;height:100%;touch-action:none;}
+.play-wrap{display:block;width:100%;height:100%;box-sizing:border-box;border:3px solid #111111;position:relative;}
+#screen-game.lim .play-wrap{border-bottom-color:var(--rds-red);}
 .center-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:4;pointer-events:none;text-align:center;}
 .center-msg span{font-weight:900;font-size:40px;letter-spacing:3px;color:var(--rds-red);background:rgba(255,255,255,.6);padding:8px 22px;border-radius:6px;}
 .countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;background:rgba(0,0,0,.32);pointer-events:none;}
@@ -191,6 +193,24 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .rk-filters .opt{flex:1;padding:10px 4px;font-size:13px;background:#fff;color:#999999;border-right:1px solid #dddddd;}
 .rk-filters .opt:last-child{border-right:none;}
 .rk-filters .opt.sel{background:var(--rds-red);color:#fff;}
+.rank-screen-title{font-size:1.2rem;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#111;text-align:center;background:#fff;padding:9px 14px 7px;border-bottom:3px solid #b03020;}
+.rank-tabs{display:flex;margin-bottom:0;margin-top:8px;}
+.rank-tab{flex:1;padding:5px 4px;font-size:0.58rem;letter-spacing:0.06em;text-align:center;cursor:pointer;color:#999;font-weight:700;text-transform:uppercase;background:#fff;border:1px solid #000;border-right:none;}
+.rank-tab:last-child{border-right:1px solid #000;}
+.rank-tab.active,.rank-tab.sel{color:#fff;background:#b03020;border-color:#b03020;}
+.rank-full-list{background:#fff;}
+#rk-table{margin-top:10px;}
+.rank-full-row{display:flex;align-items:center;gap:8px;padding:5px 14px;border-bottom:1px solid #f0f0f0;}
+.rank-full-row.rank-full-me{background:#fff2ee;box-shadow:inset 3px 0 0 #b03020;}
+.rank-full-row.rank-full-me .rank-full-name{color:#b03020;font-weight:900;}
+.rank-full-pos{font-size:0.72rem;font-weight:900;color:#ccc;width:22px;}
+.rank-full-pos.gold{color:#c9a227;}
+.rank-full-pos.silver{color:#8e9eab;}
+.rank-full-pos.bronze{color:#c07941;}
+.rank-full-name{flex:1;font-size:0.72rem;font-weight:700;color:#111;}
+.rank-full-ms{font-size:0.72rem;font-weight:900;color:#b03020;}
+.rank-full-date{font-size:0.5rem;color:#ccc;}
+.rank-full-empty{text-align:center;padding:24px;font-size:0.62rem;color:#ccc;letter-spacing:0.1em;}
 table.rk{width:100%;border-collapse:collapse;font-size:14px;}
 table.rk th,table.rk td{border:1px solid #eeeeee;padding:7px 6px;text-align:center;}
 table.rk th{background:var(--rds-red);color:#fff;font-weight:900;letter-spacing:1px;font-size:13px;border-color:var(--rds-red);text-transform:uppercase;}
@@ -270,7 +290,7 @@ table.rk tr.top3 td{background:#f7efe7;}
       <div class="exit" id="hud-repeat">&#8635; REPETIR</div>
       <div class="hud-progress" id="hud-progress"><div id="game-progress-fill"></div></div>
     </div>
-    <canvas id="play"></canvas>
+    <div class="play-wrap"><canvas id="play"></canvas></div>
     <div class="center-msg" id="center-msg" style="display:none;"><span id="center-msg-txt">PREPARATE</span></div>
     <div class="countdown" id="countdown" style="display:none;"><span id="countdown-num">3</span></div>
   </section>
@@ -287,22 +307,26 @@ table.rk tr.top3 td{background:#f7efe7;}
   <!-- RANKING -->
   <section id="screen-ranking" class="screen">
     <div class="pad">
-      <div class="block-label">RANKING</div>
-      <div class="rk-filters" id="rk-mode">
-        <div class="opt sel" data-mode="normal">NORMAL</div>
-        <div class="opt" data-mode="extremo">EXTREMO</div>
-        <div class="opt" data-mode="limite">LIMITE</div>
+      <div class="rank-screen-title">Ranking completo</div>
+      <div class="rank-tabs" id="rk-mode">
+        <div class="opt rank-tab sel" data-mode="normal">NORMAL</div>
+        <div class="opt rank-tab" data-mode="extremo">EXTREMO</div>
+        <div class="opt rank-tab" data-mode="limite">LIMITE</div>
       </div>
-      <div class="rk-filters" id="rk-count">
-        <div class="opt" data-count="15">15</div>
-        <div class="opt sel" data-count="30">30</div>
-        <div class="opt" data-count="50">50</div>
+      <div class="rank-tabs" id="rk-count">
+        <div class="opt rank-tab" data-count="15">15</div>
+        <div class="opt rank-tab sel" data-count="30">30</div>
+        <div class="opt rank-tab" data-count="50">50</div>
+      </div>
+      <div class="rank-tabs" id="rk-pen">
+        <div class="opt rank-tab sel" data-pen="0">Sin fallos</div>
+        <div class="opt rank-tab" data-pen="1">Con fallos</div>
       </div>
       <div id="rk-table"></div>
     </div>
     <div class="footer-actions" style="padding:0;border-top:none;margin-top:auto;">
-      <div style="padding:12px 16px 0;">
-        <button class="btn ghost" id="rk-dedup">OCULTAR REPETIDOS</button>
+      <div style="display:flex; justify-content:center; padding:8px 16px 8px;">
+        <button id="btn-hide-repeated" style="width:60%; padding:7px; font-size:0.65rem; font-weight:900; letter-spacing:0.1em; text-transform:uppercase; background:#111; color:#fff; border:none; cursor:pointer; border-radius:4px;" onclick="toggleHideRepeated()">Mostrar repetidos</button>
       </div>
       <div class="results-actions" style="margin-top:0;">
         <button class="game-ctrl-btn" onclick="goHome()">&#8592; Inicio</button>
@@ -407,7 +431,7 @@ var state = {
   cronoElapsed: 0
 };
 
-var rankFilter = { mode: "normal", count: 30 };
+var rankFilter = { mode: "normal", count: 30, penaliza: false };
 var savedName = "";
 function buildPlayerName(ini, dep){
   var i = (ini || "").trim().toUpperCase().replace(/[^A-Z]/g, "").slice(0,3);
@@ -423,7 +447,7 @@ function limitPerName(list, maxPer){
   }
   return out;
 }
-var hideDups = false;
+var hideRepeated = true;
 var allScores = null;
 var lastPlayed = null;
 
@@ -436,7 +460,7 @@ function show(screenId){
 }
 
 // ---------- localStorage seguro ----------
-function lbKey(mode, count){ if (mode === "limite") return "coord1_lb_limite"; return "coord1_lb_" + mode + "_" + count; }
+function lbKey(mode, count, penaliza){ if (mode === "limite") return "coord1_lb_limite"; return "coord1_lb_" + mode + "_" + count + (penaliza ? "_p1" : "_p0"); }
 function safeGet(key){
   try { var v = window.localStorage.getItem(key); return v ? JSON.parse(v) : []; }
   catch(e){ return []; }
@@ -1133,7 +1157,7 @@ function numOk(v){ return (typeof v === "number" && isFinite(v)) ? v : 0; }
 function pushScore(rec){
   // respaldo local (offline / sin Firebase)
   try {
-    var key = lbKey(rec.mode, rec.count);
+    var key = lbKey(rec.mode, rec.count, rec.penaliza);
     var list = safeGet(key);
     list.push(rec);
     if (rec.mode === "limite") list.sort(function(a,b){ if (b.trials !== a.trials) return b.trials - a.trials; return a.avgRT - b.avgRT; });
@@ -1150,6 +1174,7 @@ function saveScoreLimite(name, agg){
   return pushScore({
     mode: "limite",
     count: 0,
+    penaliza: false,
     name: name,
     avgRT: numOk(agg.avgRT ? Math.round(agg.avgRT) : 0),
     avgPrec: numOk(Math.round(agg.avgPrec)),
@@ -1163,6 +1188,7 @@ function saveScore(name, agg){
   return pushScore({
     mode: state.mode,
     count: state.count,
+    penaliza: state.penaliza,
     name: name,
     avgRT: numOk(agg.avgRT ? Math.round(agg.avgRT) : 0),
     avgPrec: numOk(Math.round(agg.avgPrec)),
@@ -1173,6 +1199,70 @@ function saveScore(name, agg){
 }
 
 // ---------- Ranking ----------
+function toggleHideRepeated(){
+  hideRepeated = !hideRepeated;
+  var btn = document.getElementById("btn-hide-repeated");
+  if (btn) btn.textContent = hideRepeated ? "Mostrar repetidos" : "Ocultar repetidos";
+  renderRanking();
+}
+function getHomeName(){
+  var ini = ($("home-initials").value || "").trim().toUpperCase().replace(/[^A-Z]/g,"").slice(0,3);
+  var dep = $("home-sport").value || "OTR";
+  return ini ? (ini + "-" + dep) : "";
+}
+function filterRepeated(list){
+  var maxPer = hideRepeated ? 1 : 3;
+  var seen = {}, result = [];
+  for (var i=0;i<list.length;i++){
+    var nm = (list[i].name || "").toLowerCase().trim();
+    var c = seen[nm] || 0;
+    if (c < maxPer){ seen[nm] = c + 1; result.push(list[i]); }
+  }
+  return result;
+}
+function renderRankList(list, host, mode){
+  list = filterRepeated(list);
+  if (!list.length){
+    host.innerHTML = '<div class="rank-full-empty">Sin resultados</div>';
+    return;
+  }
+  var isLim = (mode === "limite");
+  function valOf(r){ return isLim ? ((r.trials != null ? r.trials : "-") + " ens") : ((r.avgRT != null ? r.avgRT + " ms" : "-")); }
+  var me = getHomeName().toLowerCase().trim();
+  var TOP = 15;
+  var mePos = -1;
+  for (var k=0;k<list.length;k++){
+    if (me && (list[k].name||"").toLowerCase().trim() === me){ mePos = k; break; }
+  }
+  var top = list.slice(0, TOP), meShown = false;
+  var html = '<div class="rank-full-list">';
+  for (var i=0;i<top.length;i++){
+    var r = top[i];
+    var isMe = me && (r.name||"").toLowerCase().trim() === me;
+    if (isMe) meShown = true;
+    var medal = i===0 ? " gold" : (i===1 ? " silver" : (i===2 ? " bronze" : ""));
+    html += '<div class="rank-full-row' + (isMe ? ' rank-full-me' : '') + '">';
+    html += '<div class="rank-full-pos' + medal + '">' + (i+1) + '</div>';
+    html += '<div class="rank-full-name">' + escapeHtml(r.name) + '</div>';
+    html += '<div class="rank-full-ms">' + valOf(r) + '</div>';
+    html += '<div class="rank-full-date">' + fmtDate(r.date) + '</div>';
+    html += '</div>';
+  }
+  if (!meShown && mePos >= 0){
+    var rm = list[mePos];
+    var posLabel = (mePos + 1) > 100 ? "100+" : (mePos + 1);
+    html += '<div class="rank-full-row rank-full-me">';
+    html += '<div class="rank-full-pos">' + posLabel + '</div>';
+    html += '<div class="rank-full-name">' + escapeHtml(rm.name) + '</div>';
+    html += '<div class="rank-full-ms">' + valOf(rm) + '</div>';
+    html += '<div class="rank-full-date">' + fmtDate(rm.date) + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  host.innerHTML = html;
+}
+
+function fmtDate(ts){ if (!ts) return ""; var d = new Date(ts); var dd = ("0" + d.getDate()).slice(-2); var mm = ("0" + (d.getMonth()+1)).slice(-2); return dd + "/" + mm; }
 function renderRanking(){
   var isLim = (rankFilter.mode === "limite");
   var host = $("rk-table");
@@ -1181,62 +1271,19 @@ function renderRanking(){
     list = allScores.filter(function(r){
       if (r.mode !== rankFilter.mode) return false;
       if (isLim) return true;
-      return r.count === rankFilter.count;
+      if (r.count !== rankFilter.count) return false;
+      return (!!r.penaliza) === (!!rankFilter.penaliza);
     });
   } else {
-    list = safeGet(lbKey(rankFilter.mode, rankFilter.count));
+    list = safeGet(lbKey(rankFilter.mode, rankFilter.count, rankFilter.penaliza));
   }
-  if (!list.length){
-    host.innerHTML = '<div class="rk-empty">Sin registros en ' + MODES[rankFilter.mode].label + (isLim ? '' : (' - ' + rankFilter.count)) + ' todavia.</div>';
-    return;
-  }
-  // ordenar para mostrar (defensivo, tambien para registros antiguos)
+  // ordenar para mostrar (limite: por ensayos; resto: velocidad media ascendente)
   if (isLim){
     list.sort(function(a,b){ if (b.trials !== a.trials) return (b.trials||0) - (a.trials||0); return (a.avgRT||0) - (b.avgRT||0); });
   } else {
     list.sort(function(a,b){ return (a.avgRT||0) - (b.avgRT||0); });
   }
-  if (hideDups){
-    var seen = {}, uniq = [];
-    for (var d=0; d<list.length; d++){
-      var nmk = "k_" + (list[d].name || "").toUpperCase();
-      if (seen[nmk]) continue;
-      seen[nmk] = true; uniq.push(list[d]);
-    }
-    list = uniq;
-  }
-  // maximo 3 por nombre (sus 3 mejores marcas), en local y global
-  list = limitPerName(list, 3);
-  var html;
-  if (isLim){
-    html = '<table class="rk"><thead><tr><th>#</th><th>Nombre</th><th>Ensayos</th><th>Reaccion</th><th>Prec</th></tr></thead><tbody>';
-    for (var i=0;i<list.length;i++){
-      var r = list[i];
-      var cls = i===0 ? "top1" : (i===1 ? "top2" : (i===2 ? "top3" : ""));
-      html += '<tr class="' + cls + '">';
-      html += '<td>' + (i+1) + '</td>';
-      html += '<td class="nm">' + escapeHtml(r.name) + '</td>';
-      html += '<td class="idx">' + (r.trials != null ? r.trials : "-") + '</td>';
-      html += '<td>' + (r.avgRT || "-") + '</td>';
-      html += '<td>' + (r.avgPrec != null ? r.avgPrec + '%' : "-") + '</td>';
-      html += '</tr>';
-    }
-  } else {
-    html = '<table class="rk"><thead><tr><th>#</th><th>Nombre</th><th>Reaccion</th><th>Prec</th><th>Indice</th></tr></thead><tbody>';
-    for (var j=0;j<list.length;j++){
-      var r2 = list[j];
-      var cls2 = j===0 ? "top1" : (j===1 ? "top2" : (j===2 ? "top3" : ""));
-      html += '<tr class="' + cls2 + '">';
-      html += '<td>' + (j+1) + '</td>';
-      html += '<td class="nm">' + escapeHtml(r2.name) + '</td>';
-      html += '<td class="idx">' + (r2.avgRT || "-") + '</td>';
-      html += '<td>' + (r2.avgPrec != null ? r2.avgPrec + '%' : "-") + '</td>';
-      html += '<td>' + (r2.index != null ? r2.index : "-") + '</td>';
-      html += '</tr>';
-    }
-  }
-  html += '</tbody></table>';
-  host.innerHTML = html;
+  renderRankList(list, host, rankFilter.mode);
 }
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, function(c){
@@ -1291,12 +1338,14 @@ function applyLimiteCountUI(isLim){
 
 // ---------- Init ----------
 function openRanking(){
-  rankFilter.mode = state.mode; rankFilter.count = state.count;
+  rankFilter.mode = state.mode; rankFilter.count = state.count; rankFilter.penaliza = state.penaliza;
   syncRankFilters();
-  $("rk-count").style.display = (rankFilter.mode === "limite") ? "none" : "";
-  hideDups = false;
-  var dd = $("rk-dedup");
-  if (dd){ dd.textContent = "OCULTAR REPETIDOS"; dd.classList.remove("on"); }
+  var hideExtra = (rankFilter.mode === "limite") ? "none" : "";
+  $("rk-count").style.display = hideExtra;
+  $("rk-pen").style.display = hideExtra;
+  hideRepeated = true;
+  var dd = $("btn-hide-repeated");
+  if (dd){ dd.textContent = "Mostrar repetidos"; }
   show("screen-ranking");
   loadRanking();
 }
@@ -1345,8 +1394,9 @@ function init(){
   bindSelector("count-row", "data-count", function(v){ state.count = parseInt(v,10); });
   bindSelector("fallos-row", "data-pen", function(v){ state.penaliza = (v === "1"); });
 
-  bindSelector("rk-mode", "data-mode", function(v){ rankFilter.mode = v; $("rk-count").style.display = (v === "limite") ? "none" : ""; renderRanking(); });
+  bindSelector("rk-mode", "data-mode", function(v){ rankFilter.mode = v; var hx = (v === "limite") ? "none" : ""; $("rk-count").style.display = hx; $("rk-pen").style.display = hx; renderRanking(); });
   bindSelector("rk-count", "data-count", function(v){ rankFilter.count = parseInt(v,10); renderRanking(); });
+  bindSelector("rk-pen", "data-pen", function(v){ rankFilter.penaliza = (v === "1"); renderRanking(); });
 
   $("btn-start").addEventListener("click", startGame);
   $("btn-goranking").addEventListener("click", openRanking);
@@ -1373,14 +1423,6 @@ function init(){
   $("hud-home").addEventListener("click", function(){ stopLoop(); show("screen-home"); });
   $("hud-repeat").addEventListener("click", function(){ stopLoop(); startGame(); });
 
-  $("rk-dedup").addEventListener("click", function(){
-    hideDups = !hideDups;
-    var b = $("rk-dedup");
-    b.textContent = hideDups ? "MOSTRAR REPETIDOS" : "OCULTAR REPETIDOS";
-    b.classList.toggle("on", hideDups);
-    renderRanking();
-  });
-
   // canvas input
   var c = $("play");
   c.addEventListener("touchstart", onTouch, { passive:false });
@@ -1399,6 +1441,8 @@ function syncRankFilters(){
   for (var i=0;i<mr.length;i++) mr[i].classList.toggle("sel", mr[i].getAttribute("data-mode")===rankFilter.mode);
   var cr = $("rk-count").querySelectorAll(".opt");
   for (var j=0;j<cr.length;j++) cr[j].classList.toggle("sel", parseInt(cr[j].getAttribute("data-count"),10)===rankFilter.count);
+  var pr = $("rk-pen").querySelectorAll(".opt");
+  for (var k=0;k<pr.length;k++) pr[k].classList.toggle("sel", (pr[k].getAttribute("data-pen")==="1")===(!!rankFilter.penaliza));
 }
 
 document.addEventListener("DOMContentLoaded", init);
@@ -1414,7 +1458,7 @@ if ("serviceWorker" in navigator) {
     window.location.reload();
   });
   window.addEventListener("load", function(){
-    navigator.serviceWorker.register("sw.js").then(function(reg){
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(function(reg){
       reg.update();
       document.addEventListener("visibilitychange", function(){
         if (document.visibilityState === "visible") reg.update();
