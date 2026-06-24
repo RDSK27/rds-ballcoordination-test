@@ -2,7 +2,7 @@
 // Documento HTML / navegacion: network-first (siempre la ultima version con conexion).
 // Resto de assets same-origin + SDK de Firebase (gstatic): cache-first.
 // Las llamadas de datos a Firestore NO se cachean (persistencia offline de Firestore).
-var CACHE = "coord1-v73";
+var CACHE = "coord1-v83";
 var ASSETS = [
   "./",
   "./index.html",
