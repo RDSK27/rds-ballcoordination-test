@@ -1062,10 +1062,6 @@ function drawRTChart(id, trials){
   c.beginPath();
   for (var j=0;j<n;j++){ if(j===0) c.moveTo(X(j),Y(rts[j])); else c.lineTo(X(j),Y(rts[j])); }
   c.strokeStyle = "#b03020"; c.lineWidth = 2; c.lineJoin = "round"; c.stroke();
-  // puntos
-  c.fillStyle = "#b03020";
-  var dotR = n > 25 ? 1.8 : 3;
-  for (var k=0;k<n;k++){ c.beginPath(); c.arc(X(k), Y(rts[k]), dotR, 0, Math.PI*2); c.fill(); }
   // etiquetas eje X
   c.fillStyle = "#aaaaaa"; c.font = "9px -apple-system,Arial,sans-serif"; c.textAlign = "center";
   var step = (n <= 12) ? 1 : Math.ceil(n/8);
