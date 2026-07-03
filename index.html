@@ -55,8 +55,8 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 #screen-home{background-color:#c7cbcf;background-image:radial-gradient(70% 50% at 50% 38%,rgba(255,255,255,0.55) 0%,rgba(255,255,255,0) 60%),linear-gradient(180deg,#e4e7ea 0%,#c7cbcf 60%,#b0b4b8 100%);}
 #screen-home .pad{display:flex;flex-direction:column;flex:1;padding-top:8px;}
 #screen-home .block-label{margin:8px 0 6px;}
-#screen-home #mode-section,#screen-home #count-section,#screen-home #fallos-section{margin-top:10px;}
-#screen-home #fallos-section{margin-bottom:18px;}
+#screen-home #mode-section,#screen-home #count-section{margin-top:10px;}
+#screen-home #count-section{margin-bottom:18px;}
 #screen-home .opt{height:36px;padding:0 4px;box-sizing:border-box;white-space:nowrap;font-size:12px;line-height:36px;}
 
 /* SELECTORES SEGMENTADOS */
@@ -141,10 +141,10 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .hud .life{width:12px;height:12px;border-radius:50%;background:var(--rds-red);box-shadow:0 0 4px rgba(176,48,32,.5);transition:opacity .1s ease,background .2s ease;}
 .hud .life.lost{background:#dddddd;box-shadow:none;opacity:.45;}
 .hud .life.blink-off{opacity:0;}
-.hud .stat{font-weight:900;font-size:15px;letter-spacing:1px;text-align:center;line-height:1;}
+.hud .stat{flex:1 1 0;font-weight:900;font-size:15px;letter-spacing:1px;text-align:center;line-height:1;}
+#stat-idx{text-align:left;}
+#stat-trial{text-align:right;}
 .hud .stat small{display:none;font-size:9px;color:#999999;letter-spacing:.5px;font-weight:700;}
-#screen-game.lim #stat-trial{display:none;}
-#screen-game.lim #stat-idx{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;pointer-events:none;}
 .hud .exit{
   font-weight:900;font-size:13px;letter-spacing:1px;
   padding:5px 10px;border:none;border-radius:4px;background:var(--rds-red);color:#fff;cursor:pointer;
@@ -154,7 +154,7 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .chart-card{background:#fff;padding:8px 4px 4px;margin-top:10px;}
 .rt-chart{width:100%;height:150px;display:block;}
 #play{display:block;width:100%;height:100%;touch-action:none;}
-.play-wrap{display:block;width:100%;height:100%;box-sizing:border-box;border:3px solid #111111;position:relative;}
+.play-wrap{display:block;width:100%;flex:1 1 auto;min-height:0;box-sizing:border-box;border:3px solid #111111;position:relative;}
 #screen-game.lim .play-wrap{border-bottom-color:var(--rds-red);}
 .center-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:4;pointer-events:none;text-align:center;}
 .center-msg span{font-weight:900;font-size:40px;letter-spacing:3px;color:var(--rds-red);background:rgba(255,255,255,.6);padding:8px 22px;border-radius:6px;}
@@ -283,12 +283,6 @@ table.rk tr.top3 td{background:#f7efe7;}
           <div class="opt" data-count="50">50</div>
         </div>
       </div>
-      <div id="fallos-section">
-        <div class="opt-row two" id="fallos-row">
-          <div class="opt sel" data-pen="0">Sin fallos</div>
-          <div class="opt" data-pen="1">Con fallos</div>
-        </div>
-      </div>
 
       <div class="home-bottom">
       <div class="home-name-wrap">
@@ -304,19 +298,19 @@ table.rk tr.top3 td{background:#f7efe7;}
   <!-- GAME -->
   <section id="screen-game" class="screen">
     <div class="hud">
-      <div class="badge mode" id="hud-home">&larr; INICIO</div>
-      <div class="stat" id="stat-trial"><span id="hud-trial">--</span><small id="hud-trial-lbl">MEDIA MS</small></div>
-      <div class="spacer"></div>
+      <div class="stat" id="stat-idx"><span id="hud-idx">0</span><small id="hud-idx-lbl">ENSAYOS</small></div>
       <div class="lives" id="hud-lives"><span class="life"></span><span class="life"></span><span class="life"></span></div>
       <div class="crono" id="hud-crono" style="display:none;"><span id="hud-crono-val">0:00.00</span></div>
-      <div class="spacer"></div>
-      <div class="stat" id="stat-idx"><span id="hud-idx">--</span><small id="hud-idx-lbl">INDICE</small></div>
-      <div class="exit" id="hud-repeat">&#8635; REPETIR</div>
+      <div class="stat" id="stat-trial"><span id="hud-trial">--</span><small id="hud-trial-lbl">MEDIA MS</small></div>
       <div class="hud-progress" id="hud-progress"><div id="game-progress-fill"></div></div>
     </div>
     <div class="play-wrap"><canvas id="play"></canvas></div>
     <div class="center-msg" id="center-msg" style="display:none;"><span id="center-msg-txt">PREPARATE</span></div>
     <div class="countdown" id="countdown" style="display:none;"><span id="countdown-num">3</span></div>
+    <div class="results-actions">
+      <button class="game-ctrl-btn" onclick="goHome()">&#8592; Inicio</button>
+      <button class="game-ctrl-btn" style="border-right:none;border-left:1px solid #333;" onclick="repeatTest()">&#8634; Repetir</button>
+    </div>
   </section>
 
   <!-- RESULTS -->
@@ -341,10 +335,6 @@ table.rk tr.top3 td{background:#f7efe7;}
         <div class="opt rank-tab" data-count="15">15</div>
         <div class="opt rank-tab sel" data-count="30">30</div>
         <div class="opt rank-tab" data-count="50">50</div>
-      </div>
-      <div class="rank-tabs" id="rk-pen">
-        <div class="opt rank-tab sel" data-pen="0">Sin fallos</div>
-        <div class="opt rank-tab" data-pen="1">Con fallos</div>
       </div>
       <div id="rk-table"></div>
     </div>
@@ -440,7 +430,7 @@ var MODES = {
 var state = {
   mode: "normal",
   count: 15,
-  penaliza: false,
+  penaliza: true,
   trials: [],
   index: 0,
   balls: [],
@@ -455,7 +445,7 @@ var state = {
   cronoElapsed: 0
 };
 
-var rankFilter = { mode: "normal", count: 30, penaliza: false };
+var rankFilter = { mode: "normal", count: 30, penaliza: true };
 var savedName = "";
 function buildPlayerName(ini, dep){
   var i = (ini || "").trim().toUpperCase().replace(/[^A-Z]/g, "").slice(0,3);
@@ -570,7 +560,7 @@ window.addEventListener("resize", function(){
 
 // ---------- Logica de juego ----------
 function cfg(){ return MODES[state.mode]; }
-function cronoMode(){ return state.mode !== "limite" && !state.penaliza; }
+function cronoMode(){ return state.mode !== "limite"; }
 function fmtClock(ms){ if (ms < 0) ms = 0; var tc = Math.floor(ms / 10); var cc = tc % 100; var ts = Math.floor(tc / 100); var sc = ts % 60; var mn = Math.floor(ts / 60); return mn + ":" + (sc < 10 ? "0" + sc : sc) + "." + (cc < 10 ? "0" + cc : cc); }
 function minDim(){ return Math.min(CW, CH); }
 
@@ -583,19 +573,13 @@ function startGame(){
   state.balls = [];
   state.tapTimes = [];
   state.fails = 0;
-  var penalizaOn = (state.mode !== "limite") && state.penaliza;
-  state.maxLives = penalizaOn ? ((state.mode === "extremo") ? 5 : 3) : 0;
+  state.maxLives = (state.mode === "normal") ? 3 : 5;
   $("screen-game").classList.toggle("lim", state.mode === "limite");
   renderLives();
   updateLives();
   var cron = $("hud-crono"), livesEl = $("hud-lives");
-  if (cronoMode()){
-    if (cron){ cron.style.display = ""; var cv0 = $("hud-crono-val"); if (cv0) cv0.textContent = "0:00.00"; }
-    if (livesEl) livesEl.style.display = "none";
-  } else {
-    if (cron) cron.style.display = "none";
-    if (livesEl) livesEl.style.display = "";
-  }
+  if (cron) cron.style.display = "none";
+  if (livesEl) livesEl.style.display = (state.maxLives > 0) ? "" : "none";
   state.active = false;
   show("screen-game");
   resizeCanvas();
@@ -840,7 +824,7 @@ function handleTap(clientX, clientY){
     if (state.maxLives > 0){
       state.fails = (state.fails || 0) + 1;
       updateLives();
-      if (state.fails >= state.maxLives){ endByFails(); }
+      if (state.fails >= state.maxLives){ if (state.mode === "limite") endLimite("fails"); else endByFails(); }
     }
     return;
   }
@@ -914,14 +898,8 @@ function updateHud(){
   // dato 1: media de reaccion (ms) que se lleva
   $("hud-trial").textContent = (state.trials.length && agg.avgRT) ? Math.round(agg.avgRT) : "--";
   $("hud-trial-lbl").textContent = "MEDIA MS";
-  // dato 2: indice (Normal/Extremo) o ensayos (Limite)
-  if (state.mode === "limite"){
-    $("hud-idx").textContent = state.index;
-    $("hud-idx-lbl").textContent = "ENSAYOS";
-  } else {
-    $("hud-idx").textContent = state.trials.length ? Math.round(agg.index) : "--";
-    $("hud-idx-lbl").textContent = "INDICE";
-  }
+  $("hud-idx").textContent = state.index;
+  $("hud-idx-lbl").textContent = "ENSAYOS";
   // barra de progreso (Normal/Extremo); en Limite se oculta (infinito)
   var prog = $("hud-progress"), fill = $("game-progress-fill");
   if (state.mode === "limite"){
@@ -1332,16 +1310,6 @@ function refreshModeDesc(){
   var el = $("mode-desc");
   if (el) el.innerHTML = MODES[state.mode].desc;
 }
-function applyLimiteFallosUI(isLim){
-  var row = $("fallos-row");
-  if (!row) return;
-  row.classList.toggle("locked-fallos", isLim);
-  if (isLim){
-    var opts = row.querySelectorAll(".opt");
-    for (var i=0;i<opts.length;i++){ opts[i].classList.toggle("sel", opts[i].getAttribute("data-pen") === "0"); }
-    state.penaliza = false;
-  }
-}
 function applyLimiteCountUI(isLim){
   var row = $("count-row");
   if (!row) return;
@@ -1366,7 +1334,6 @@ function openRanking(){
   syncRankFilters();
   var hideExtra = (rankFilter.mode === "limite") ? "none" : "";
   $("rk-count").style.display = hideExtra;
-  $("rk-pen").style.display = hideExtra;
   hideRepeated = true;
   var dd = $("btn-hide-repeated");
   if (dd){ dd.textContent = "Mostrar repetidos"; }
@@ -1408,19 +1375,15 @@ function init(){
   });
 
   applyLimiteCountUI(state.mode === "limite");
-  applyLimiteFallosUI(state.mode === "limite");
   bindSelector("mode-row", "data-mode", function(v){
     state.mode = v;
     refreshModeDesc();
     applyLimiteCountUI(v === "limite");
-    applyLimiteFallosUI(v === "limite");
   });
   bindSelector("count-row", "data-count", function(v){ state.count = parseInt(v,10); });
-  bindSelector("fallos-row", "data-pen", function(v){ state.penaliza = (v === "1"); });
 
-  bindSelector("rk-mode", "data-mode", function(v){ rankFilter.mode = v; var hx = (v === "limite") ? "none" : ""; $("rk-count").style.display = hx; $("rk-pen").style.display = hx; renderRanking(); });
+  bindSelector("rk-mode", "data-mode", function(v){ rankFilter.mode = v; var hx = (v === "limite") ? "none" : ""; $("rk-count").style.display = hx; renderRanking(); });
   bindSelector("rk-count", "data-count", function(v){ rankFilter.count = parseInt(v,10); renderRanking(); });
-  bindSelector("rk-pen", "data-pen", function(v){ rankFilter.penaliza = (v === "1"); renderRanking(); });
 
   $("btn-start").addEventListener("click", startGame);
   $("btn-goranking").addEventListener("click", openRanking);
@@ -1444,8 +1407,6 @@ function init(){
   $("home-initials").addEventListener("input", persistPlayerName);
   $("home-sport").addEventListener("change", persistPlayerName);
 
-  $("hud-home").addEventListener("click", function(){ stopLoop(); show("screen-home"); });
-  $("hud-repeat").addEventListener("click", function(){ stopLoop(); startGame(); });
 
   // canvas input
   var c = $("play");
@@ -1465,8 +1426,6 @@ function syncRankFilters(){
   for (var i=0;i<mr.length;i++) mr[i].classList.toggle("sel", mr[i].getAttribute("data-mode")===rankFilter.mode);
   var cr = $("rk-count").querySelectorAll(".opt");
   for (var j=0;j<cr.length;j++) cr[j].classList.toggle("sel", parseInt(cr[j].getAttribute("data-count"),10)===rankFilter.count);
-  var pr = $("rk-pen").querySelectorAll(".opt");
-  for (var k=0;k<pr.length;k++) pr[k].classList.toggle("sel", (pr[k].getAttribute("data-pen")==="1")===(!!rankFilter.penaliza));
 }
 
 document.addEventListener("DOMContentLoaded", init);
