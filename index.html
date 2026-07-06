@@ -225,13 +225,13 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .rank-full-row{display:flex;align-items:center;gap:8px;padding:5px 14px;border-bottom:1px solid #f0f0f0;}
 .rank-full-row.rank-full-me{background:#fff2ee;box-shadow:inset 3px 0 0 #b03020;}
 .rank-full-row.rank-full-me .rank-full-name{color:#b03020;font-weight:900;}
-.rank-full-pos{font-size:0.72rem;font-weight:900;color:#ccc;width:22px;}
+.rank-full-pos{font-size:0.72rem;font-weight:900;color:#555;width:22px;}
 .rank-full-pos.gold{color:#c9a227;}
 .rank-full-pos.silver{color:#8e9eab;}
 .rank-full-pos.bronze{color:#c07941;}
 .rank-full-name{flex:1;font-size:0.72rem;font-weight:700;color:#111;}
 .rank-full-ms{font-size:0.72rem;font-weight:900;color:#b03020;}
-.rank-full-date{font-size:0.5rem;color:#ccc;}
+.rank-full-date{font-size:0.5rem;color:#555;}
 .rank-full-empty{text-align:center;padding:24px;font-size:0.62rem;color:#ccc;letter-spacing:0.1em;}
 table.rk{width:100%;border-collapse:collapse;font-size:14px;}
 table.rk th,table.rk td{border:1px solid #eeeeee;padding:7px 6px;text-align:center;}
@@ -1412,11 +1412,13 @@ function init(){
   var c = $("play");
   c.addEventListener("touchstart", onTouch, { passive:false });
   c.addEventListener("mousedown", onMouse);
-  document.addEventListener("gesturestart", function(e){ e.preventDefault(); }, { passive:false });
-  document.addEventListener("gesturechange", function(e){ e.preventDefault(); }, { passive:false });
-  document.addEventListener("gestureend", function(e){ e.preventDefault(); }, { passive:false });
   var __gs = document.getElementById("screen-game");
-  if (__gs) __gs.addEventListener("touchmove", function(e){ e.preventDefault(); }, { passive:false });
+  if (__gs){
+    __gs.addEventListener("gesturestart", function(e){ e.preventDefault(); }, { passive:false });
+    __gs.addEventListener("gesturechange", function(e){ e.preventDefault(); }, { passive:false });
+    __gs.addEventListener("gestureend", function(e){ e.preventDefault(); }, { passive:false });
+    __gs.addEventListener("touchmove", function(e){ e.preventDefault(); }, { passive:false });
+  }
 
   refreshModeDesc();
 }
