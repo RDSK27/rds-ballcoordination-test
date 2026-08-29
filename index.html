@@ -182,12 +182,13 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .res-top::before{top:8px;bottom:0;}
 .res-bot::before{top:0;bottom:16px;}
 .res-bot::after{content:"";position:absolute;top:0;left:7%;right:7%;height:3px;margin-top:-1.5px;background:var(--rds-red);}
-.res-actions{display:flex;flex-direction:column;align-items:center;gap:9px;margin-top:18px;}
-.res-actions button{width:74%;padding:9px 15px;font-size:14px;font-weight:800;letter-spacing:1px;cursor:pointer;text-transform:uppercase;border:2px solid var(--rds-red);}
-.res-save-btn{background:var(--rds-red);color:#fff;}
-.res-save-btn[disabled]{opacity:.4;cursor:default;}
-.res-rank-btn{background:#fff;color:var(--rds-red);}
-.res-save-btn.saved{background:#9a9a9a;border-color:#9a9a9a;color:#fff;opacity:1;cursor:default;}
+.res-actions{display:flex;justify-content:center;margin-top:16px;}
+.save-row-inner{display:flex;align-items:stretch;justify-content:center;gap:8px;width:calc(60% + 92px);max-width:100%;}
+.res-actions button{padding:7px;font-size:0.65rem;font-weight:900;letter-spacing:0.1em;cursor:pointer;text-transform:uppercase;border:none;border-radius:4px;}
+.res-save-btn{flex:1;max-width:60%;background:var(--rds-red);color:#fff;}
+.res-save-btn[disabled]{background:#9a9a9a;opacity:1;cursor:default;}
+.res-rank-btn{flex:none;width:84px;background:#111;color:#fff;}
+.res-save-btn.saved{background:#9a9a9a;color:#fff;opacity:1;cursor:default;}
 .stat-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;margin-top:8px;background:#e0e0e0;border:1px solid #dddddd;}
 .stat-card{border:none;background:#fff;text-align:center;padding:12px 4px;}
 .stat-card .v{font-weight:900;font-size:26px;line-height:1;color:#111;}
@@ -226,6 +227,8 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .rank-full-row{display:flex;align-items:center;gap:8px;padding:5px 14px;border-bottom:1px solid #f0f0f0;}
 .rank-full-row.rank-full-me{background:#fff2ee;box-shadow:inset 3px 0 0 #b03020;}
 .rank-full-row.rank-full-me .rank-full-name{color:#b03020;font-weight:900;}
+.rank-full-row.rank-full-me.me-grey{background:#f0f0f0;box-shadow:inset 3px 0 0 #9A9A9A;}
+.rank-full-row.rank-full-me.me-grey .rank-full-name{color:#555;}
 .rank-full-pos{font-size:0.72rem;font-weight:900;color:#555;width:22px;}
 .rank-full-pos.gold{color:#c9a227;}
 .rank-full-pos.silver{color:#8e9eab;}
@@ -341,7 +344,10 @@ table.rk tr.top3 td{background:#f7efe7;}
     </div>
     <div class="footer-actions" style="padding:0;border-top:none;margin-top:auto;">
       <div style="display:flex; justify-content:center; padding:8px 16px 8px;">
-        <button id="btn-hide-repeated" style="width:60%; padding:7px; font-size:0.65rem; font-weight:900; letter-spacing:0.1em; text-transform:uppercase; background:#111; color:#fff; border:none; cursor:pointer; border-radius:4px;" onclick="toggleHideRepeated()">Mostrar repetidos</button>
+        <div class="save-row-inner">
+          <button id="btn-hide-repeated" style="flex:1; max-width:60%; padding:7px; font-size:0.65rem; font-weight:900; letter-spacing:0.1em; text-transform:uppercase; background:#111; color:#fff; border:none; cursor:pointer; border-radius:4px;" onclick="toggleHideRepeated()">Mostrar repetidos</button>
+          <button id="btnGuardarRank" style="display:none; flex:none; width:84px; align-items:center; justify-content:center; padding:7px; font-size:0.65rem; font-weight:900; letter-spacing:0.1em; text-transform:uppercase; background:var(--rds-red); color:#fff; border:none; cursor:pointer; border-radius:4px;" aria-label="Guardar mi marca" title="Guardar mi marca">Guardar</button>
+        </div>
       </div>
       <div class="results-actions" style="margin-top:0;">
         <button class="game-ctrl-btn" onclick="goHome()">&#8592; Inicio</button>
@@ -448,6 +454,7 @@ var state = {
 
 var rankFilter = { mode: "normal", count: 30, penaliza: true };
 var savedName = "";
+var bcSaved, bcPending = null, bcLastRec = null;
 function buildPlayerName(ini, dep){
   var i = (ini || "").trim().toUpperCase().replace(/[^A-Z]/g, "").slice(0,3);
   if (!i) i = "RDS";
@@ -1092,10 +1099,15 @@ function renderResults(isLimitFail, isNull, nullReason){
   }
 
   if (agg.total > 0){
-    html += '<div class="res-actions">';
+    if (!state.noSave){
+      bcSaved = false;
+      bcPending = { mode: state.mode, count: state.count, penaliza: state.penaliza, name: (savedName || "RDS"),
+        avgRT: numOk(agg.avgRT ? Math.round(agg.avgRT) : 0), trials: numOk(state.count), date: Date.now() };
+    }
+    html += '<div class="res-actions"><div class="save-row-inner">';
     html += '<button id="res-save" class="res-save-btn"' + (state.noSave ? ' disabled' : '') + '>GUARDAR RESULTADO</button>';
     html += '<button id="res-ranking" class="res-rank-btn">RANKING</button>';
-    html += '</div>';
+    html += '</div></div>';
     html += '<div id="save-feedback" class="tag-line"></div>';
   }
 
@@ -1137,10 +1149,13 @@ function renderLimite(reason){
     html += '<div class="chart-card"><canvas id="rt-chart" class="rt-chart"></canvas></div>';
   }
 
-  html += '<div class="res-actions">';
+  bcSaved = false;
+  bcPending = { mode: "limite", count: 0, penaliza: false, name: (savedName || "RDS"),
+    avgRT: numOk(agg.avgRT ? Math.round(agg.avgRT) : 0), trials: numOk(state.index), date: Date.now() };
+  html += '<div class="res-actions"><div class="save-row-inner">';
   html += '<button id="res-save" class="res-save-btn">GUARDAR RESULTADO</button>';
   html += '<button id="res-ranking" class="res-rank-btn">RANKING</button>';
-  html += '</div>';
+  html += '</div></div>';
   html += '<div id="save-feedback" class="tag-line"></div>';
 
   pad.innerHTML = html;
@@ -1159,6 +1174,7 @@ function renderLimite(reason){
 function numOk(v){ return (typeof v === "number" && isFinite(v)) ? v : 0; }
 
 function pushScore(rec){
+  bcLastRec = rec; bcSaved = true;
   // respaldo local (offline / sin Firebase)
   try {
     var key = lbKey(rec.mode, rec.count, rec.penaliza);
@@ -1224,7 +1240,7 @@ function filterRepeated(list){
   }
   return result;
 }
-function renderRankList(list, host, mode){
+function renderRankList(list, host, mode, latest){
   list = filterRepeated(list);
   if (!list.length){
     host.innerHTML = '<div class="rank-full-empty">Sin resultados</div>';
@@ -1262,6 +1278,26 @@ function renderRankList(list, host, mode){
     html += '<div class="rank-full-date">' + fmtDate(rm.date) + '</div>';
     html += '</div>';
   }
+  if (latest){
+    var betterL = function(a,b){
+      if (isLim) return (a.trials||0) > (b.trials||0) || ((a.trials||0) === (b.trials||0) && (a.avgRT||0) < (b.avgRT||0));
+      return (a.avgRT||0) < (b.avgRT||0);
+    };
+    var shownL = false;
+    for (var s2=0;s2<top.length;s2++){ if (top[s2].date != null && top[s2].date === latest.date){ shownL = true; break; } }
+    var meExtra = (!meShown && mePos >= 0 && list[mePos] && list[mePos].date === latest.date);
+    if (!shownL && !meExtra){
+      var lpos = 1;
+      for (var q=0;q<list.length;q++){ if (betterL(list[q], latest)) lpos++; }
+      var greyL = (mePos >= 0 && mePos < TOP && betterL(list[mePos], latest));
+      html += '<div class="rank-full-row rank-full-me' + (greyL ? ' me-grey' : '') + '">';
+      html += '<div class="rank-full-pos">' + (lpos > 100 ? "100+" : lpos) + '</div>';
+      html += '<div class="rank-full-name">' + escapeHtml(latest.name) + '</div>';
+      html += '<div class="rank-full-ms">' + valOf(latest) + '</div>';
+      html += '<div class="rank-full-date">' + fmtDate(latest.date) + '</div>';
+      html += '</div>';
+    }
+  }
   html += '</div>';
   host.innerHTML = html;
 }
@@ -1287,7 +1323,14 @@ function renderRanking(){
   } else {
     list.sort(function(a,b){ return (a.avgRT||0) - (b.avgRT||0); });
   }
-  renderRankList(list, host, rankFilter.mode);
+  var latestRec = (bcSaved === false && bcPending) ? bcPending
+                : ((bcSaved === true && bcLastRec) ? bcLastRec : null);
+  if (latestRec){
+    if (latestRec.mode !== rankFilter.mode) latestRec = null;
+    else if (rankFilter.mode !== "limite" &&
+             (latestRec.count !== rankFilter.count || (!!latestRec.penaliza) !== (!!rankFilter.penaliza))) latestRec = null;
+  }
+  renderRankList(list, host, rankFilter.mode, latestRec);
 }
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, function(c){
@@ -1330,6 +1373,24 @@ function applyLimiteCountUI(isLim){
   }
 }
 
+function bcUpdateRankSaveBtn(){
+  var g = document.getElementById("btnGuardarRank");
+  if (!g) return;
+  if (bcSaved === false){
+    g.style.display = "flex"; g.disabled = false;
+    g.style.background = "var(--rds-red)"; g.style.cursor = "pointer";
+    g.setAttribute("aria-label", "Guardar mi marca"); g.setAttribute("title", "Guardar mi marca");
+    g.textContent = "Guardar";
+  } else if (bcSaved === true){
+    g.style.display = "flex"; g.disabled = true;
+    g.style.background = "#9A9A9A"; g.style.cursor = "default";
+    g.setAttribute("aria-label", "Marca guardada"); g.setAttribute("title", "Marca guardada");
+    g.textContent = "Guardado";
+  } else {
+    g.style.display = "none";
+  }
+}
+
 // ---------- Init ----------
 function openRanking(){
   rankFilter.mode = state.mode; rankFilter.count = state.count; rankFilter.penaliza = state.penaliza;
@@ -1339,6 +1400,7 @@ function openRanking(){
   hideRepeated = true;
   var dd = $("btn-hide-repeated");
   if (dd){ dd.textContent = "Mostrar repetidos"; }
+  bcUpdateRankSaveBtn();
   show("screen-ranking");
   loadRanking();
 }
@@ -1389,6 +1451,19 @@ function init(){
 
   $("btn-start").addEventListener("click", startGame);
   $("btn-goranking").addEventListener("click", openRanking);
+
+  var bgr = $("btnGuardarRank");
+  if (bgr) bgr.addEventListener("click", function(){
+    if (bcSaved !== false || !bcPending) return;
+    var rec = bcPending;
+    pushScore(rec).catch(function(){});
+    this.disabled = true;
+    this.style.background = "#9A9A9A"; this.style.cursor = "default";
+    this.setAttribute("aria-label", "Marca guardada"); this.setAttribute("title", "Marca guardada");
+    this.textContent = "Guardado";
+    if (allScores){ allScores.push(rec); }
+    renderRanking();
+  });
 
   // nombre para el ranking: iniciales + deporte -> INI-DEP
   var sIni = safeGet("coord1_initials");
