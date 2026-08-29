@@ -105,7 +105,7 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .btn.ghost{background:#fff;color:#666666;border:1px solid #dddddd;font-size:13px;letter-spacing:1.5px;}
 .btn.rank{background:#fff;color:var(--rds-red);border:2px solid var(--rds-red);font-size:14px;}
 #res-home,#res-again,#rk-home,#rk-repeat{background:#111;color:#fff;border:none;}
-#btn-start,#btn-goranking{width:60%;margin-left:auto;margin-right:auto;}
+#btn-start{width:60%;margin-left:auto;margin-right:auto;}
 .home-logo{display:block;width:110px;max-width:36%;height:auto;margin:2px auto 6px;}
 .home-name-wrap{width:52%;margin:18px auto 0;display:flex;flex-direction:column;align-items:center;}
 .home-name-input{width:100%;box-sizing:border-box;border:2px solid var(--rds-red);border-radius:5px;padding:8px 10px;text-align:center;font-weight:700;font-size:14px;letter-spacing:1px;color:#111;text-transform:uppercase;background:#fff;}
@@ -120,7 +120,14 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .home-name-wrap .home-name-btn{margin-top:0;height:100%;width:auto;flex:0 0 auto;padding:0 14px;border-radius:0 5px 5px 0;font-size:11px;}
 .start-ring{order:1;margin:5px auto 3px;padding:4px;border-radius:50%;background:conic-gradient(#ffffff,#9a9a9a,#e8e8e8,#5a5a5a,#ffffff,#8a8a8a,#dcdcdc,#666666,#ffffff);box-shadow:0 5px 12px rgba(0,0,0,0.6);display:flex;transition:transform 0.08s, box-shadow 0.08s;}.start-ring:active{transform:translateY(3px);box-shadow:0 2px 6px rgba(0,0,0,0.6);}#btn-start{width:70px;height:70px;border-radius:50%;padding:0;margin:0;background:radial-gradient(circle at 35% 30%, #e84030 0%, #b03020 45%, #7a1a10 100%);color:#fff;font-weight:900;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 2px 4px rgba(255,255,255,0.28), inset 0 -3px 6px rgba(0,0,0,0.5);transition:transform 0.08s;}
 #btn-start:active{box-shadow:inset 0 3px 7px rgba(0,0,0,0.6);}
-#btn-goranking{order:2;width:75%;height:auto;padding:9px;margin:6px auto 0;display:flex;align-items:center;justify-content:center;letter-spacing:.18em;border-radius:6px;}
+#btn-goranking{width:70px;height:70px;padding:0;margin:0;border-radius:50%;}
+.home-btn-row{display:flex;align-items:center;justify-content:center;gap:16px;order:1;margin:5px auto 3px;}
+.home-btn-row .start-ring{margin:0;order:0;}
+.start-wrap{display:flex;width:fit-content;align-items:center;justify-content:center;padding:4px;border-radius:50%;background:conic-gradient(#ffffff,#9a9a9a,#e8e8e8,#5a5a5a,#ffffff,#8a8a8a,#dcdcdc,#666666,#ffffff);box-shadow:0 5px 12px rgba(0,0,0,0.6);transition:transform 0.08s, box-shadow 0.08s;}
+.start-wrap:active{transform:translateY(3px);box-shadow:0 2px 6px rgba(0,0,0,0.6);}
+.start-btn{width:70px;height:70px;border-radius:50%;border:none;cursor:pointer;box-shadow:inset 0 2px 4px rgba(255,255,255,0.28), inset 0 -3px 6px rgba(0,0,0,0.5);}
+.start-btn.rank-btn{background:radial-gradient(circle at 35% 30%, #ffffff 0%, #ececec 45%, #c6c6c6 100%);display:flex;align-items:center;justify-content:center;padding:0;}
+.start-btn.rank-btn svg{display:block;}
 .home-bottom{margin-top:auto;align-self:center;width:92%;box-sizing:border-box;margin-bottom:14px;border:3px solid var(--rds-red);border-radius:10px;background-color:#000000;padding:14px 12px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;}
 .home-bottom .tag-line{color:#cccccc;order:4;}
 .mode-desc{
@@ -299,8 +306,10 @@ table.rk tr.top3 td{background:#f7efe7;}
         <input id="home-initials" class="home-ini-input" maxlength="3" placeholder="INI" autocomplete="off" oninput="this.value=this.value.replace(/[^A-Za-z]/g,'').toUpperCase()">
         <select id="home-sport" class="home-sport-select"><option value="ATL">Atletismo</option><option value="AUT">Automovilismo</option><option value="BMT">B&#225;dminton</option><option value="BLC">Baloncesto</option><option value="BLM">Balonmano</option><option value="BOX">Boxeo</option><option value="CIC">Ciclismo</option><option value="ESC">Escalada</option><option value="ESG">Esgrima</option><option value="ESQ">Esqu&#237;</option><option value="FTB">F&#250;tbol</option><option value="GIM">Gimnasia</option><option value="GLF">Golf</option><option value="HAL">Halterofilia</option><option value="HCK">Hockey</option><option value="JUD">Judo</option><option value="KRT">Karate</option><option value="MOT">Motociclismo</option><option value="NTC">Nataci&#243;n</option><option value="OTR" selected>Otros</option><option value="PAD">P&#225;del</option><option value="PRG">Pirag&#252;ismo</option><option value="REM">Remo</option><option value="RUG">Rugby</option><option value="SRF">Surf</option><option value="TKD">Taekwondo</option><option value="TNS">Tenis</option><option value="TRI">Triatl&#243;n</option><option value="VOL">Voleibol</option></select>
       </div>
-      <div class="start-ring"><button class="btn primary" id="btn-start">START</button></div>
-      <button class="btn rank" id="btn-goranking">&#127942; RANKING</button>
+      <div class="home-btn-row">
+        <div class="start-ring"><button class="btn primary" id="btn-start">START</button></div>
+        <div class="start-wrap"><button id="btn-goranking" class="start-btn rank-btn" aria-label="Ranking"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#333333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 13.5v7.5M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 4H4v2a3 3 0 0 0 3 3M17 4h3v2a3 3 0 0 1-3 3"/></svg></button></div>
+      </div>
       </div>
     </div>
   </section>
