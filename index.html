@@ -59,7 +59,12 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 #screen-home .block-label{margin:8px 0 6px;}
 #screen-home #mode-section,#screen-home #count-section{margin-top:10px;}
 #screen-home #count-section{margin-bottom:18px;}
-#screen-home .opt{height:36px;padding:0 4px;box-sizing:border-box;white-space:nowrap;font-size:12px;line-height:36px;}
+#screen-home .opt{height:36px;padding:0 4px;box-sizing:border-box;white-space:nowrap;font-size:12px;line-height:36px;background:transparent;color:#fff;border-right:3px solid #666;text-shadow:0 1px 2px rgba(0,0,0,0.7);}
+#screen-home .opt-row{border:0;border-top:4px solid #b03020;border-radius:0;background:linear-gradient(rgba(0,0,0,0.20),rgba(0,0,0,0.28)),var(--carbon);background-size:cover;background-position:center;}
+#screen-home .opt:last-child{border-right:0;}
+#screen-home .opt small{color:rgba(255,255,255,0.72);}
+#screen-home .opt.sel{background:var(--rds-red);color:#fff;text-shadow:none;}
+#screen-home .opt.sel small{color:#f3d4cf;}
 
 /* SELECTORES SEGMENTADOS */
 .block-label{font-size:11px;letter-spacing:3px;font-weight:700;color:#aaaaaa;text-transform:uppercase;text-align:center;margin:16px 0 7px;}
