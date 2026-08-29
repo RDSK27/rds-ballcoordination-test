@@ -321,9 +321,18 @@ table.rk tr.top3 td{background:#f7efe7;}
   <!-- RESULTS -->
   <section id="screen-results" class="screen">
     <div class="pad" id="results-pad"></div>
-    <div class="results-actions">
-      <button class="game-ctrl-btn" onclick="goHome()">&#8592; Inicio</button>
-      <button class="game-ctrl-btn" style="border-right:none;border-left:1px solid #333;" onclick="repeatTest()">&#8634; Repetir</button>
+    <div class="footer-actions" style="padding:0;border-top:none;margin-top:auto;">
+      <div class="res-actions" id="res-save-row" style="margin-top:0;padding:8px 16px 8px;">
+        <div class="save-row-inner">
+          <button id="res-save" class="res-save-btn">GUARDAR RESULTADO</button>
+          <button id="res-ranking" class="res-rank-btn">RANKING</button>
+        </div>
+      </div>
+      <div id="save-feedback" class="tag-line" style="text-align:center;padding:0 16px 6px;font-size:12px;"></div>
+      <div class="results-actions" style="margin-top:0;">
+        <button class="game-ctrl-btn" onclick="goHome()">&#8592; Inicio</button>
+        <button class="game-ctrl-btn" style="border-right:none;border-left:1px solid #333;" onclick="repeatTest()">&#8634; Repetir</button>
+      </div>
     </div>
   </section>
 
@@ -1099,32 +1108,34 @@ function renderResults(isLimitFail, isNull, nullReason){
     html += '<div class="chart-card"><canvas id="rt-chart" class="rt-chart"></canvas></div>';
   }
 
-  if (agg.total > 0){
-    if (!state.noSave){
-      bcSaved = false;
-      bcPending = { mode: state.mode, count: state.count, penaliza: state.penaliza, name: (savedName || "RDS"),
-        avgRT: numOk(agg.avgRT ? Math.round(agg.avgRT) : 0), trials: numOk(state.count), date: Date.now() };
-    }
-    html += '<div class="res-actions"><div class="save-row-inner">';
-    html += '<button id="res-save" class="res-save-btn"' + (state.noSave ? ' disabled' : '') + '>GUARDAR RESULTADO</button>';
-    html += '<button id="res-ranking" class="res-rank-btn">RANKING</button>';
-    html += '</div></div>';
-    html += '<div id="save-feedback" class="tag-line"></div>';
+  if (agg.total > 0 && !state.noSave){
+    bcSaved = false;
+    bcPending = { mode: state.mode, count: state.count, penaliza: state.penaliza, name: (savedName || "RDS"),
+      avgRT: numOk(agg.avgRT ? Math.round(agg.avgRT) : 0), trials: numOk(state.count), date: Date.now() };
   }
 
   pad.innerHTML = html;
   requestAnimationFrame(function(){ drawRTChart("rt-chart", state.trials); });
 
-  var rkBtn = $("res-ranking"); if (rkBtn) rkBtn.addEventListener("click", openRanking);
-  var saveBtn = $("res-save");
-  if (saveBtn && !state.noSave){
-    saveBtn.addEventListener("click", function(){
-      var nm = savedName ? savedName : "RDS";
-      saveBtn.disabled = true; saveBtn.classList.add("saved"); saveBtn.textContent = "Guardado";
-      saveScore(nm, agg).catch(function(){});
-    });
+  resetResultSaveRow(agg.total > 0, !!state.noSave, function(){ return saveScore(savedName ? savedName : "RDS", agg); });
+}
+
+function resetResultSaveRow(show, noSave, doSave){
+  var row = $("res-save-row"), fb = $("save-feedback"), rk = $("res-ranking"), sv = $("res-save");
+  if (rk) rk.onclick = openRanking;
+  if (fb) fb.textContent = "";
+  if (row) row.style.display = show ? "" : "none";
+  if (!show) return;
+  if (sv){
+    sv.disabled = !!noSave;
+    sv.classList.remove("saved");
+    sv.textContent = "GUARDAR RESULTADO";
+    sv.onclick = noSave ? null : function(){
+      sv.disabled = true; sv.classList.add("saved"); sv.textContent = "Guardado";
+      doSave().catch(function(){});
+    };
   }
-  if (state.noSave && $("save-feedback")) $("save-feedback").textContent = "No se guarda por demasiados fallos";
+  if (noSave && fb) fb.textContent = "No se guarda por demasiados fallos";
 }
 
 function renderLimite(reason){
@@ -1153,23 +1164,10 @@ function renderLimite(reason){
   bcSaved = false;
   bcPending = { mode: "limite", count: 0, penaliza: false, name: (savedName || "RDS"),
     avgRT: numOk(agg.avgRT ? Math.round(agg.avgRT) : 0), trials: numOk(state.index), date: Date.now() };
-  html += '<div class="res-actions"><div class="save-row-inner">';
-  html += '<button id="res-save" class="res-save-btn">GUARDAR RESULTADO</button>';
-  html += '<button id="res-ranking" class="res-rank-btn">RANKING</button>';
-  html += '</div></div>';
-  html += '<div id="save-feedback" class="tag-line"></div>';
 
   pad.innerHTML = html;
   requestAnimationFrame(function(){ drawRTChart("rt-chart", state.trials); });
-  var rkBtn = $("res-ranking"); if (rkBtn) rkBtn.addEventListener("click", openRanking);
-  var saveBtn = $("res-save");
-  if (saveBtn){
-    saveBtn.addEventListener("click", function(){
-      var nm = savedName ? savedName : "RDS";
-      saveBtn.disabled = true; saveBtn.classList.add("saved"); saveBtn.textContent = "Guardado";
-      saveScoreLimite(nm, agg).catch(function(){});
-    });
-  }
+  resetResultSaveRow(true, false, function(){ return saveScoreLimite(savedName ? savedName : "RDS", agg); });
 }
 
 function numOk(v){ return (typeof v === "number" && isFinite(v)) ? v : 0; }
