@@ -112,7 +112,7 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .home-name-input:focus{outline:none;}
 .home-name-btn{margin-top:-2px;width:64%;border:none;background:var(--rds-red);color:#fff;font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:5px 0;border-radius:0 0 5px 5px;cursor:pointer;}
 .home-name-btn:active{transform:translateY(1px);}
-.home-name-wrap{order:3;width:200px;max-width:90%;margin:6px auto 0;flex-direction:row;align-items:stretch;height:38px;gap:0;}
+.home-name-wrap{order:3;width:200px;max-width:90%;margin:31px auto 0;flex-direction:row;align-items:stretch;height:38px;gap:0;}
 .home-ini-input{flex:1;min-width:0;height:100%;box-sizing:border-box;border:2px solid var(--rds-red);border-right:none;border-radius:5px 0 0 5px;text-align:center;font-weight:700;font-size:14px;letter-spacing:1px;color:#111;text-transform:uppercase;background:#fff;padding:0 6px;}
 .home-ini-input:focus{outline:none;}
 .home-sport-select{flex:1;min-width:0;height:100%;box-sizing:border-box;border:2px solid var(--rds-red);border-radius:0 5px 5px 0;font-weight:700;font-size:12px;color:#111;background:#fff;padding:0 8px;-webkit-appearance:none;appearance:none;}
@@ -121,14 +121,15 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .start-ring{order:1;margin:5px auto 3px;padding:4px;border-radius:50%;background:conic-gradient(#ffffff,#9a9a9a,#e8e8e8,#5a5a5a,#ffffff,#8a8a8a,#dcdcdc,#666666,#ffffff);box-shadow:0 5px 12px rgba(0,0,0,0.6);display:flex;transition:transform 0.08s, box-shadow 0.08s;}.start-ring:active{transform:translateY(3px);box-shadow:0 2px 6px rgba(0,0,0,0.6);}#btn-start{width:70px;height:70px;border-radius:50%;padding:0;margin:0;background:radial-gradient(circle at 35% 30%, #e84030 0%, #b03020 45%, #7a1a10 100%);color:#fff;font-weight:900;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 2px 4px rgba(255,255,255,0.28), inset 0 -3px 6px rgba(0,0,0,0.5);transition:transform 0.08s;}
 #btn-start:active{box-shadow:inset 0 3px 7px rgba(0,0,0,0.6);}
 #btn-goranking{width:70px;height:70px;padding:0;margin:0;border-radius:50%;}
-.home-btn-row{display:flex;align-items:center;justify-content:center;gap:16px;order:1;margin:5px auto 3px;}
+.home-btn-row{display:flex;align-items:center;justify-content:center;gap:16px;order:1;margin:15px auto 0;}
+.home-bottom .app-ver{order:5;margin-top:auto;text-align:center;color:#9a9a9a;font-size:0.72rem;letter-spacing:0.12em;font-family:Arial,sans-serif;padding-top:6px;}
 .home-btn-row .start-ring{margin:0;order:0;}
 .start-wrap{display:flex;width:fit-content;align-items:center;justify-content:center;padding:4px;border-radius:50%;background:conic-gradient(#ffffff,#9a9a9a,#e8e8e8,#5a5a5a,#ffffff,#8a8a8a,#dcdcdc,#666666,#ffffff);box-shadow:0 5px 12px rgba(0,0,0,0.6);transition:transform 0.08s, box-shadow 0.08s;}
 .start-wrap:active{transform:translateY(3px);box-shadow:0 2px 6px rgba(0,0,0,0.6);}
 .start-btn{width:70px;height:70px;border-radius:50%;border:none;cursor:pointer;box-shadow:inset 0 2px 4px rgba(255,255,255,0.28), inset 0 -3px 6px rgba(0,0,0,0.5);}
 .start-btn.rank-btn{background:radial-gradient(circle at 35% 30%, #ffffff 0%, #ececec 45%, #c6c6c6 100%);display:flex;align-items:center;justify-content:center;padding:0;}
 .start-btn.rank-btn svg{display:block;}
-.home-bottom{margin-top:auto;align-self:center;width:92%;box-sizing:border-box;margin-bottom:14px;border:3px solid var(--rds-red);border-radius:10px;background-color:#000000;padding:14px 12px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.home-bottom{margin-top:auto;align-self:center;width:92%;box-sizing:border-box;margin-bottom:14px;border:3px solid var(--rds-red);border-radius:10px;background-color:#000000;padding:20px 12px 12px;display:flex;flex-direction:column;align-items:center;min-height:250px;}
 .home-bottom .tag-line{color:#cccccc;order:4;}
 .mode-desc{
   background:#fff;border:1px solid #dddddd;border-radius:4px;
@@ -310,6 +311,7 @@ table.rk tr.top3 td{background:#f7efe7;}
         <div class="start-ring"><button class="btn primary" id="btn-start">START</button></div>
         <div class="start-wrap"><button id="btn-goranking" class="start-btn rank-btn" aria-label="Ranking"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#333333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 13.5v7.5M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 4H4v2a3 3 0 0 0 3 3M17 4h3v2a3 3 0 0 1-3 3"/></svg></button></div>
       </div>
+      <div class="app-ver">v106</div>
       </div>
     </div>
   </section>
