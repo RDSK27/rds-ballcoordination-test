@@ -198,6 +198,9 @@ header img{width:100%;height:auto;display:block;margin-bottom:0;}
 .res-bot::before{top:0;bottom:16px;}
 .res-bot::after{content:"";position:absolute;top:0;left:7%;right:7%;height:3px;margin-top:-1.5px;background:var(--rds-red);}
 .res-actions{display:flex;justify-content:center;margin-top:16px;}
+  .pos-wrap{display:none;flex-direction:column;align-items:center;gap:4px;padding:6px 16px 0;text-align:center;}
+  .pos-circle{width:54px;height:54px;border-radius:50%;background:#000;color:#fff;font-weight:900;font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center;font-family:inherit;}
+  .pos-txt{font-size:10px;font-weight:700;letter-spacing:0.04em;color:#555;}
 .save-row-inner{display:flex;align-items:stretch;justify-content:center;gap:8px;width:calc(60% + 92px);max-width:100%;}
 .res-actions button{padding:7px;font-size:0.65rem;font-weight:900;letter-spacing:0.1em;cursor:pointer;text-transform:uppercase;border:none;border-radius:4px;}
 .res-save-btn{flex:1;max-width:60%;background:var(--rds-red);color:#fff;}
@@ -312,7 +315,7 @@ table.rk tr.top3 td{background:#f7efe7;}
         <div class="start-ring"><button class="btn primary" id="btn-start">START</button></div>
         <div class="start-wrap"><button id="btn-goranking" class="start-btn rank-btn" aria-label="Ranking"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#333333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 13.5v7.5M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 4H4v2a3 3 0 0 0 3 3M17 4h3v2a3 3 0 0 1-3 3"/></svg></button></div>
       </div>
-      <div class="app-ver">v124</div>
+      <div class="app-ver">v125</div>
       <div id="pending-sync" class="pending-sync"></div>
       </div>
     </div>
@@ -340,6 +343,7 @@ table.rk tr.top3 td{background:#f7efe7;}
   <section id="screen-results" class="screen">
     <div class="pad" id="results-pad"></div>
     <div class="footer-actions" style="padding:0;border-top:none;margin-top:auto;">
+    <div class="pos-wrap" id="posWrap"><div class="pos-circle" id="posNum">-</div><div class="pos-txt">posici&#243;n de este resultado en el ranking</div></div>
       <div class="res-actions" id="res-save-row" style="margin-top:0;padding:8px 16px 8px;">
         <div class="save-row-inner">
           <button id="res-save" class="res-save-btn">GUARDAR RESULTADO</button>
@@ -1327,7 +1331,30 @@ function renderResults(isLimitFail, isNull, nullReason){
   resetResultSaveRow(agg.total > 0, !!state.noSave, function(){ return saveScore(savedName ? savedName : "RDS", agg); });
 }
 
-function resetResultSaveRow(show, noSave, doSave){
+/* Posicion de este resultado (2026-10-05): con la copia local del ranking (cache + marcas pendientes de este dispositivo), sin lecturas
+   de Firestore. Cuenta solo la mejor marca de cada OTRA persona, como el ranking (que oculta repetidos). Sin copia guardada, no se muestra. */
+function updatePos(on){
+  var w=document.getElementById('posWrap'); if(!w) return;
+  w.style.display='none';
+  try{
+    if(!on||!bcPending) return;
+    var raw=window.localStorage.getItem('coord1_rankcache_all'); if(!raw) return;
+    var g=JSON.parse(raw), rec={}, k;
+    for(k in bcPending) rec[k]=bcPending[k];
+    var isLim=(rec.mode==='limite');
+    var loc=pendingOnly(safeGet(lbKey(rec.mode,rec.count,rec.penaliza)));
+    var rows=mergeRank(g,loc).filter(function(r){ if(r.mode!==rec.mode) return false; if(isLim) return true; if(r.count!==rec.count) return false; return (!!r.penaliza)===(!!rec.penaliza); });
+    function srt(l){ if(isLim) l.sort(function(a,b){ if(b.trials!==a.trials) return (b.trials||0)-(a.trials||0); return (a.avgRT||0)-(b.avgRT||0); }); else l.sort(function(a,b){ return (a.avgRT||0)-(b.avgRT||0); }); }
+    srt(rows);
+    var seen={}, out=[], me=(rec.name||'').toLowerCase().trim();
+    rows.forEach(function(r){ var n=(r.name||'').toLowerCase().trim(); if(n===me||seen[n]) return; seen[n]=1; out.push(r); });
+    out.push(rec); srt(out);
+    var p=out.indexOf(rec)+1, e=document.getElementById('posNum');
+    e.textContent=p; e.style.fontSize=p>=100?'16px':(p>=10?'22px':'26px');
+    w.style.display='flex';
+  }catch(e){}
+}
+function resetResultSaveRow(show, noSave, doSave){ updatePos(show && !noSave);
   var row = $("res-save-row"), fb = $("save-feedback"), rk = $("res-ranking"), sv = $("res-save");
   if (rk) rk.onclick = openRanking;
   if (fb) fb.textContent = "";
