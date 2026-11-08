@@ -353,7 +353,7 @@ table.rk tr.top3 td{background:#f7efe7;}
         <div class="start-ring"><button class="btn primary" id="btn-start">START</button></div>
         <div class="start-wrap"><button id="btn-goranking" class="start-btn rank-btn" aria-label="Ranking"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#333333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 13.5v7.5M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 4H4v2a3 3 0 0 0 3 3M17 4h3v2a3 3 0 0 1-3 3"/></svg></button></div>
       </div>
-      <div class="app-ver">v131</div>
+      <div class="app-ver">v132</div>
       <div id="pending-sync" class="pending-sync"></div>
       </div>
     </div>
@@ -1799,25 +1799,30 @@ function loadRanking(){
 }
 
 /* ---------- modo x2: dos jugadores en un movil, sin ranking (2026-11-08; misma estructura que las demas apps x2) ----------
-   De momento solo Normal. Jugador 1 = mitad de abajo, jugador 2 = mitad de arriba (girada 180 grados). Cada uno tiene su bola en su mitad: es una carrera, el toque de uno no afecta al otro.
+   Normal o Extremo. Jugador 1 = mitad de abajo, jugador 2 = mitad de arriba (girada 180 grados). Cada uno tiene su bola en su mitad: es una carrera, el toque de uno no afecta al otro.
    Las dos mitades usan la misma secuencia de bolas (misma salida desde el centro, direccion y velocidad por numero de bola), en coordenadas de cada zona. La banda central muestra las bolas que le faltan a cada uno.
    Empieza con X_BALLS. Tocar la bola la quita y sale la siguiente. Tocar fuera: se permite X_MISSES veces por bola (la bola se aclara); la siguiente vez se añade una bola a las que faltan y la bola vuelve a roja.
-   Gana el juego el primero que se queda sin bolas. Partido al mejor de 3. */
-var X={on:false,games:[0,0],gameNo:1,state:'',to:0,raf:0,last:0,hist:[],seq:[],pl:[null,null],cv:[null,null],ready:[false,false]};
+   Extremo: una bola roja y una negra a la vez en cada mitad, que chocan entre si; cada bola tocada resta 1 y la siguiente pareja sale al tocar las dos (si solo queda una por salir, sale sola). Los fallos cuentan por pareja y se reinician al tocar una bola.
+   Marcador hacia atras: las bolas que le faltan a cada uno (empieza 10-10). Gana el juego el primero que se queda sin bolas. Partido al mejor de 3. */
+var X={on:false,mode:'normal',games:[0,0],gameNo:1,state:'',to:0,raf:0,last:0,hist:[],seq:[],pl:[null,null],cv:[null,null],ready:[false,false]};
 var X_BALLS=10, X_MISSES=2, X_END_PAUSE=700, X_WINGAMES=2, X_ORD=['primer','segundo','tercer'];
 var X_FACE=[   /* borde, arriba, medio, abajo: roja, mas clara y casi blanca */
   ['#6e1810','#d9614f','#b03020','#8a2015'],
   ['#b5685c','#f4bdb2','#e08d7e','#cc7768'],
   ['#c9a7a1','#ffffff','#f8ecea','#eddcd8']
 ];
+var X_FACE_B=[   /* la negra: negra, gris y casi blanca */
+  ['#050505','#9a9a9a','#333333','#161616'],
+  ['#555555','#d0d0d0','#8c8c8c','#707070'],
+  ['#a8a8a8','#ffffff','#efefef','#dedede']
+];
 function isX2(){ return $('mode-x2').classList.contains('x2on'); }
 function xToggle(el){
-  var on=el.classList.toggle('x2on'), row=$('mode-row'), opts=row.querySelectorAll('.opt'), i;
-  row.querySelector('[data-mode="extremo"]').classList.toggle('x2-off',on);   /* por ahora x2 solo en Normal */
-  row.querySelector('[data-mode="limite"]').classList.toggle('x2-off',on);
+  var on=el.classList.toggle('x2on'), row=$('mode-row'), lim=row.querySelector('[data-mode="limite"]');
+  lim.classList.toggle('x2-off',on);   /* x2 solo se combina con Normal o Extremo */
   $('count-row').classList.toggle('x2-off',on);
-  if(on){
-    for(i=0;i<opts.length;i++) if(opts[i]!==el) opts[i].classList.remove('sel');
+  if(on && lim.classList.contains('sel')){
+    lim.classList.remove('sel');
     row.querySelector('[data-mode="normal"]').classList.add('sel');
     state.mode='normal'; refreshModeDesc(); applyLimiteCountUI(false);
   }
@@ -1843,7 +1848,7 @@ function xRender(){
   var p, q, cap=Math.max(5,Math.floor((window.innerWidth-112)/20));
   for(p=0;p<2;p++){
     q=X.pl[p]; var o=X.pl[1-p];
-    xZone(p,'.x2-pts').innerHTML=xRes(q.done,o.done);
+    xZone(p,'.x2-pts').innerHTML=xRes(q.left,o.left);   /* hacia atras: las que le faltan a cada uno */
     xZone(p,'.x2-gm').innerHTML=xRes(X.games[p],X.games[1-p]);
     xZone(p,'.x2-cu').textContent=q.done+'/'+q.target;
     var h='', i, n=q.left>cap?cap-1:q.left;
@@ -1855,20 +1860,38 @@ function xRender(){
 function xGameSetup(){
   var p;
   X.seq=[];
-  for(p=0;p<2;p++) X.pl[p]={left:X_BALLS,done:0,target:X_BALLS,idx:0,miss:0,ball:null,flash:null};
+  for(p=0;p<2;p++) X.pl[p]={left:X_BALLS,done:0,target:X_BALLS,idx:0,miss:0,balls:[],flash:null};
 }
-function xSpec(i){   /* la misma direccion para los dos en cada numero de bola */
-  while(X.seq.length<=i) X.seq.push(Math.random()*Math.PI*2);
+function xSpec(i){   /* las mismas direcciones para los dos en cada turno: [roja, negra (mas o menos hacia el lado contrario)] */
+  while(X.seq.length<=i){ var a=Math.random()*Math.PI*2; X.seq.push([a,a+Math.PI+(Math.random()-0.5)*1.2]); }
   return X.seq[i];
 }
+function xMake(kind,x,y,a,sp,r){ return {kind:kind,x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:r,bounces:0,slowed:false,trail:[]}; }
 function xSpawn(p){
-  var q=X.pl[p], c=MODES.normal, v=X.cv[p], m=Math.min(v.W,v.H), r=Math.max(20,m*c.rPct), a=xSpec(q.idx);
-  var prog=Math.min(1,q.idx/(X_BALLS-1)), sp=m*c.speedPct*(1+SPEED_RAMP*prog);
+  var q=X.pl[p], c=MODES[X.mode], v=X.cv[p], m=Math.min(v.W,v.H), r=Math.max(20,m*c.rPct), sq=xSpec(q.idx);
+  var ext=X.mode==='extremo', turns=ext?Math.floor(X_BALLS/2):X_BALLS;
+  var prog=Math.min(1,q.idx/(turns-1)), sp=m*c.speedPct*(1+SPEED_RAMP*prog), cx=v.W/2, cy=v.H/2;
   q.miss=0;
-  q.ball={x:v.W/2,y:v.H/2,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:r,bounces:0,slowed:false,trail:[]};
+  if(ext && q.left>=2){   /* pareja desde el centro, una a cada lado para que no salgan solapadas */
+    var a=sq[0], o=r+2;
+    q.balls=[xMake('red',cx+Math.cos(a)*o,cy+Math.sin(a)*o,a,sp,r),xMake('black',cx-Math.cos(a)*o,cy-Math.sin(a)*o,sq[1],sp,r)];
+  } else q.balls=[xMake('red',cx,cy,sq[0],sp,r)];
+}
+function xCollide(arr){   /* igual que en el modo de un jugador */
+  for(var i=0;i<arr.length;i++) for(var j=i+1;j<arr.length;j++){
+    var a=arr[i], c=arr[j], dx=c.x-a.x, dy=c.y-a.y, d=Math.sqrt(dx*dx+dy*dy);
+    if(d===0){ dx=0.01; dy=0; d=0.01; }
+    var mn=a.r+c.r;
+    if(d<mn){
+      var nx=dx/d, ny=dy/d, ov=(mn-d)/2;
+      a.x-=nx*ov; a.y-=ny*ov; c.x+=nx*ov; c.y+=ny*ov;
+      var vn=(a.vx-c.vx)*nx+(a.vy-c.vy)*ny;
+      if(vn>0){ a.vx-=vn*nx; a.vy-=vn*ny; c.vx+=vn*nx; c.vy+=vn*ny; }
+    }
+  }
 }
 function xDrawBall(g,t,lv){
-  var x=t.x, y=t.y, r=t.r, F=X_FACE[lv], tr=t.trail, n=tr.length, s, f;
+  var x=t.x, y=t.y, r=t.r, F=(t.kind==='black'?X_FACE_B:X_FACE)[lv], tr=t.trail, n=tr.length, s, f;
   for(s=0;s<n-1;s++){
     f=(s+1)/n; g.globalAlpha=0.30*f*f;
     g.beginPath(); g.arc(tr[s].x,tr[s].y,r*(0.48+0.50*f),0,Math.PI*2); g.fillStyle=F[2]; g.fill();
@@ -1886,7 +1909,7 @@ function xDrawAll(now){
     var v=X.cv[p], q=X.pl[p]; if(!v) continue;
     v.g.clearRect(0,0,v.W,v.H);
     if(!q) continue;
-    if(q.ball) xDrawBall(v.g,q.ball,Math.min(q.miss,X_FACE.length-1));
+    for(var b=0;b<q.balls.length;b++) xDrawBall(v.g,q.balls[b],Math.min(q.miss,X_FACE.length-1));
     if(q.flash && now && now-q.flash.t<130){
       v.g.beginPath(); v.g.arc(q.flash.x,q.flash.y,16,0,Math.PI*2); v.g.strokeStyle=q.flash.hit?'#b03020':'#111111'; v.g.lineWidth=4; v.g.stroke();
     }
@@ -1894,15 +1917,19 @@ function xDrawAll(now){
 }
 function xStep(dt){
   for(var p=0;p<2;p++){
-    var t=X.pl[p].ball, v=X.cv[p]; if(!t) continue;
-    t.x+=t.vx*dt; t.y+=t.vy*dt;
-    var b=false;
-    if(t.x<t.r){ t.x=t.r; t.vx=Math.abs(t.vx); b=true; }
-    if(t.x>v.W-t.r){ t.x=v.W-t.r; t.vx=-Math.abs(t.vx); b=true; }
-    if(t.y<t.r){ t.y=t.r; t.vy=Math.abs(t.vy); b=true; }
-    if(t.y>v.H-t.r){ t.y=v.H-t.r; t.vy=-Math.abs(t.vy); b=true; }
-    if(b){ t.bounces++; if(t.bounces>=2 && !t.slowed){ t.vx*=0.85; t.vy*=0.85; t.slowed=true; } }
-    t.trail.push({x:t.x,y:t.y}); if(t.trail.length>TRAIL_LEN) t.trail.shift();
+    var arr=X.pl[p].balls, v=X.cv[p], i, t;
+    for(i=0;i<arr.length;i++){
+      t=arr[i];
+      t.x+=t.vx*dt; t.y+=t.vy*dt;
+      var b=false;
+      if(t.x<t.r){ t.x=t.r; t.vx=Math.abs(t.vx); b=true; }
+      if(t.x>v.W-t.r){ t.x=v.W-t.r; t.vx=-Math.abs(t.vx); b=true; }
+      if(t.y<t.r){ t.y=t.r; t.vy=Math.abs(t.vy); b=true; }
+      if(t.y>v.H-t.r){ t.y=v.H-t.r; t.vy=-Math.abs(t.vy); b=true; }
+      if(b){ t.bounces++; if(t.bounces>=2 && !t.slowed){ t.vx*=0.85; t.vy*=0.85; t.slowed=true; } }
+    }
+    if(arr.length>1) xCollide(arr);
+    for(i=0;i<arr.length;i++){ t=arr[i]; t.trail.push({x:t.x,y:t.y}); if(t.trail.length>TRAIL_LEN) t.trail.shift(); }
   }
 }
 function xLoop(ts){
@@ -1916,11 +1943,13 @@ function xLoop(ts){
 function xReset(){ xClear(); X.games=[0,0]; X.gameNo=1; X.hist=[]; xPanelsOff(); xLightsOff(); xGameSetup(); }
 function startX2(){   /* pantalla inicial con la informacion para cada jugador */
   initAudio();
+  X.mode=state.mode==='extremo'?'extremo':'normal';
   xReset(); X.on=false; X.state='intro'; X.ready=[false,false];
   show('screen-x2'); $('x2Stop').style.display='block'; xSize(); xDrawAll(); xRender();
-  for(var p=0;p<2;p++) xPanel(p,'<div class="x2-pt">Jugador '+(p+1)+'</div>'
+  var ext=X.mode==='extremo';
+  for(var p=0;p<2;p++) xPanel(p,'<div class="x2-pt">Jugador '+(p+1)+(ext?' &middot; Extremo':'')+'</div>'
     +'<div class="x2-pr">Uno contra uno, al mejor de 3 juegos.<br>Gana cada juego el primero que se queda sin bolas.</div>'
-    +'<div class="x2-rules">Empiezas con 10: cada bola que tocas se quita. Tocar fuera se permite 2 veces por bola (se va aclarando); a la tercera se te a&ntilde;ade una bola.</div>'
+    +'<div class="x2-rules">'+(ext?'Salen dos bolas a la vez, roja y negra. ':'')+'Empiezas con 10: cada bola que tocas se quita. Tocar fuera se permite 2 veces por bola (se va aclarando); a la tercera se te a&ntilde;ade una bola.</div>'
     +xBtn('start','Empezar'));
 }
 function xReady(p,b,a){   /* Empezar/Continuar: arranca cuando lo han pulsado los dos */
@@ -1948,11 +1977,12 @@ function xPlay(){
 }
 function xTap(p,clientX,clientY){
   if(!X.on || X.state!=='play') return;
-  var q=X.pl[p], t=q.ball, v=X.cv[p]; if(!t) return;
+  var q=X.pl[p], v=X.cv[p]; if(!q.balls.length) return;
   var r=v.c.getBoundingClientRect();
   var x=p===0?clientX-r.left:r.right-clientX, y=p===0?clientY-r.top:r.bottom-clientY;   /* la zona de arriba esta girada */
-  var d=Math.hypot(x-t.x,y-t.y), now=performance.now();
-  if(d>t.r*MODES.normal.hitFactor){
+  var now=performance.now(), best=-1, bd=Infinity, i, d;
+  for(i=0;i<q.balls.length;i++){ d=Math.hypot(x-q.balls[i].x,y-q.balls[i].y); if(d<=q.balls[i].r*MODES[X.mode].hitFactor && d<bd){ bd=d; best=i; } }
+  if(best<0){
     soundMiss();
     q.flash={x:x,y:y,hit:false,t:now};
     if(q.miss>=X_MISSES){ q.left++; q.target++; q.miss=0; xRender(); }   /* tercer fallo con esta bola: una bola mas */
@@ -1961,9 +1991,10 @@ function xTap(p,clientX,clientY){
   }
   soundHit();
   q.flash={x:x,y:y,hit:true,t:now};
-  q.done++; q.left--; q.idx++;
-  if(q.left<=0){ q.ball=null; xRender(); xWin(p); return; }
-  xSpawn(p); xRender();
+  q.balls.splice(best,1); q.done++; q.left--; q.miss=0;
+  if(q.left<=0){ q.balls=[]; xRender(); xWin(p); return; }
+  if(!q.balls.length){ q.idx++; xSpawn(p); }
+  xRender();
 }
 function xWin(i){   /* breve pausa antes del panel, para que un toque en plena carrera no pulse Continuar */
   X.state='pause';
@@ -1973,8 +2004,8 @@ function xWin(i){   /* breve pausa antes del panel, para que un toque en plena c
 }
 function xGameEnd(i){
   var p, h, j;
-  X.games[i]++; X.hist.push([X.pl[0].done,X.pl[1].done]);
-  X.pl[0].ball=null; X.pl[1].ball=null; xDrawAll();
+  X.games[i]++; X.hist.push([X.pl[0].left,X.pl[1].left]);
+  X.pl[0].balls=[]; X.pl[1].balls=[]; xDrawAll();
   if(X.games[i]>=X_WINGAMES){
     X.on=false; X.state='end'; xRender(); $('x2Stop').style.display='none'; soundHit();
     for(p=0;p<2;p++){
@@ -1987,12 +2018,12 @@ function xGameEnd(i){
   }
   X.state='between'; X.ready=[false,false]; xRender();
   for(p=0;p<2;p++) xPanel(p,'<div class="x2-pt">Jugador '+(i+1)+' gana el '+X_ORD[X.gameNo-1]+' juego</div>'
-    +'<div class="x2-pr">Bolas '+xRes(X.pl[p].done,X.pl[1-p].done)+'<br>Juegos '+xRes(X.games[p],X.games[1-p])+'</div>'
+    +'<div class="x2-pr">Bolas restantes '+xRes(X.pl[p].left,X.pl[1-p].left)+'<br>Juegos '+xRes(X.games[p],X.games[1-p])+'</div>'
     +xBtn('next','Continuar'));
 }
 function xStop(){
   if(X.state==='intro'){ goHome(); return; }
-  xClear(); X.on=false; X.state='end'; xLightsOff(); X.pl[0].ball=null; X.pl[1].ball=null; xDrawAll(); xRender(); $('x2Stop').style.display='none';
+  xClear(); X.on=false; X.state='end'; xLightsOff(); X.pl[0].balls=[]; X.pl[1].balls=[]; xDrawAll(); xRender(); $('x2Stop').style.display='none';
   for(var p=0;p<2;p++) xPanel(p,'<div class="x2-pt">Partida parada</div><div class="x2-pbs">'+xBtn('home','Inicio',true)+xBtn('again','Repetir')+'</div>');
 }
 (function(){
