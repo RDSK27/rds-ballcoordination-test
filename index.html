@@ -73,7 +73,12 @@ body.x2-active header{display:none;}
 .x2-top{transform:rotate(180deg);}
 .x2-info{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:0 4px;flex:none;font-family:Arial,sans-serif;font-weight:900;white-space:nowrap;}
 .x2-pts{font-size:28px;line-height:1.15;color:var(--rds-red);}
-.x2-gm,.x2-cu{font-size:21px;color:#111;}
+.x2-gm,.x2-who{font-size:15px;color:#111;}
+.x2-pts{font-size:15px;}
+.x2-info>span{flex:1;}
+.x2-who{text-align:center;font-size:17px;}
+.x2-gm{text-align:right;}
+.x2-info b{font-size:22px;}
 .x2-area{flex:1;min-height:0;position:relative;border:3px solid #111;box-sizing:border-box;background-color:#fff;background-image:radial-gradient(circle, rgba(17,17,17,0.20) 1.1px, transparent 1.4px);background-size:20px 20px;}
 .x2-cv{position:absolute;left:0;top:0;width:100%;height:100%;display:block;touch-action:none;}
 .x2-panel{touch-action:pan-y;position:absolute;inset:0;z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:6px 12px;box-sizing:border-box;background:#fff;text-align:center;overflow:auto;font-family:Arial,sans-serif;color:#111;}
@@ -353,7 +358,7 @@ table.rk tr.top3 td{background:#f7efe7;}
         <div class="start-ring"><button class="btn primary" id="btn-start">START</button></div>
         <div class="start-wrap"><button id="btn-goranking" class="start-btn rank-btn" aria-label="Ranking"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#333333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 13.5v7.5M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 4H4v2a3 3 0 0 0 3 3M17 4h3v2a3 3 0 0 1-3 3"/></svg></button></div>
       </div>
-      <div class="app-ver">v132</div>
+      <div class="app-ver">v133</div>
       <div id="pending-sync" class="pending-sync"></div>
       </div>
     </div>
@@ -362,7 +367,7 @@ table.rk tr.top3 td{background:#f7efe7;}
   <!-- GAME -->
   <section id="screen-x2" class="screen">
     <div class="x2-zone x2-top" id="x2z1">
-      <div class="x2-info"><span class="x2-pts"></span><span class="x2-gm"></span><span class="x2-cu"></span></div>
+      <div class="x2-info"><span class="x2-pts"></span><span class="x2-who"></span><span class="x2-gm"></span></div>
       <div class="x2-area">
         <canvas class="x2-cv" data-p="1"></canvas>
         <div class="x2-panel"></div>
@@ -375,7 +380,7 @@ table.rk tr.top3 td{background:#f7efe7;}
       <button id="x2Stop" type="button" aria-label="Parar">&#10005;</button>
     </div>
     <div class="x2-zone x2-bot" id="x2z0">
-      <div class="x2-info"><span class="x2-pts"></span><span class="x2-gm"></span><span class="x2-cu"></span></div>
+      <div class="x2-info"><span class="x2-pts"></span><span class="x2-who"></span><span class="x2-gm"></span></div>
       <div class="x2-area">
         <canvas class="x2-cv" data-p="0"></canvas>
         <div class="x2-panel"></div>
@@ -1805,7 +1810,7 @@ function loadRanking(){
    Extremo: una bola roja y una negra a la vez en cada mitad, que chocan entre si; cada bola tocada resta 1 y la siguiente pareja sale al tocar las dos (si solo queda una por salir, sale sola). Los fallos cuentan por pareja y se reinician al tocar una bola.
    Marcador hacia atras: las bolas que le faltan a cada uno (empieza 10-10). Gana el juego el primero que se queda sin bolas. Partido al mejor de 3. */
 var X={on:false,mode:'normal',games:[0,0],gameNo:1,state:'',to:0,raf:0,last:0,hist:[],seq:[],pl:[null,null],cv:[null,null],ready:[false,false]};
-var X_BALLS=10, X_MISSES=2, X_END_PAUSE=700, X_WINGAMES=2, X_ORD=['primer','segundo','tercer'];
+var X_BALLS=10, X_MISSES=2, X_END_PAUSE=700, X_WINGAMES=3, X_ORD=['primer','segundo','tercer'];
 var X_FACE=[   /* borde, arriba, medio, abajo: roja, mas clara y casi blanca */
   ['#6e1810','#d9614f','#b03020','#8a2015'],
   ['#b5685c','#f4bdb2','#e08d7e','#cc7768'],
@@ -1848,9 +1853,9 @@ function xRender(){
   var p, q, cap=Math.max(5,Math.floor((window.innerWidth-112)/20));
   for(p=0;p<2;p++){
     q=X.pl[p]; var o=X.pl[1-p];
-    xZone(p,'.x2-pts').innerHTML=xRes(q.left,o.left);   /* hacia atras: las que le faltan a cada uno */
-    xZone(p,'.x2-gm').innerHTML=xRes(X.games[p],X.games[1-p]);
-    xZone(p,'.x2-cu').textContent=q.done+'/'+q.target;
+    xZone(p,'.x2-pts').innerHTML='Set <b>'+xRes(q.left,o.left)+'</b>';   /* hacia atras: las que le faltan a cada uno */
+    xZone(p,'.x2-gm').innerHTML='Partido <b>'+xRes(X.games[p],X.games[1-p])+'</b>';
+    xZone(p,'.x2-who').textContent='Jugador '+(p+1);
     var h='', i, n=q.left>cap?cap-1:q.left;
     for(i=0;i<n;i++) h+='<i class="x2-dot"></i>';
     if(q.left>cap) h+='<b class="x2-more">+'+(q.left-n)+'</b>';
@@ -1948,7 +1953,7 @@ function startX2(){   /* pantalla inicial con la informacion para cada jugador *
   show('screen-x2'); $('x2Stop').style.display='block'; xSize(); xDrawAll(); xRender();
   var ext=X.mode==='extremo';
   for(var p=0;p<2;p++) xPanel(p,'<div class="x2-pt">Jugador '+(p+1)+(ext?' &middot; Extremo':'')+'</div>'
-    +'<div class="x2-pr">Uno contra uno, al mejor de 3 juegos.<br>Gana cada juego el primero que se queda sin bolas.</div>'
+    +'<div class="x2-pr">Gana el partido el primero que gane 3 sets.<br>Gana el set el primero que se queda sin bolas.</div>'
     +'<div class="x2-rules">'+(ext?'Salen dos bolas a la vez, roja y negra. ':'')+'Empiezas con 10: cada bola que tocas se quita. Tocar fuera se permite 2 veces por bola (se va aclarando); a la tercera se te a&ntilde;ade una bola.</div>'
     +xBtn('start','Empezar'));
 }
@@ -2011,14 +2016,14 @@ function xGameEnd(i){
     for(p=0;p<2;p++){
       for(h=[],j=0;j<X.hist.length;j++) h.push(xRes(X.hist[j][p],X.hist[j][1-p]));
       xPanel(p,'<div class="x2-pt">'+(p===i?'¡Enhorabuena, Jugador '+(p+1)+'!':'Jugador '+(i+1)+' gana el partido')+'</div>'
-        +'<div class="x2-pr">'+(p===i?'Has ganado el partido ':'Resultado ')+xRes(X.games[p],X.games[1-p])+'<br>Juegos: '+h.join(', ')+'</div>'
+        +'<div class="x2-pr">'+(p===i?'Has ganado el partido ':'Has perdido el partido ')+xRes(X.games[p],X.games[1-p])+'<br>Sets: '+h.join(', ')+'</div>'
         +'<div class="x2-pbs">'+xBtn('home','Inicio',true)+xBtn('again','Repetir')+'</div>');
     }
     return;
   }
   X.state='between'; X.ready=[false,false]; xRender();
-  for(p=0;p<2;p++) xPanel(p,'<div class="x2-pt">Jugador '+(i+1)+' gana el '+X_ORD[X.gameNo-1]+' juego</div>'
-    +'<div class="x2-pr">Bolas restantes '+xRes(X.pl[p].left,X.pl[1-p].left)+'<br>Juegos '+xRes(X.games[p],X.games[1-p])+'</div>'
+  for(p=0;p<2;p++) xPanel(p,'<div class="x2-pt">Has '+(p===i?'ganado':'perdido')+' el set '+X.gameNo+'</div>'
+    +'<div class="x2-pr">Bolas restantes '+xRes(X.pl[p].left,X.pl[1-p].left)+'<br>Partido '+xRes(X.games[p],X.games[1-p])+'</div>'
     +xBtn('next','Continuar'));
 }
 function xStop(){
